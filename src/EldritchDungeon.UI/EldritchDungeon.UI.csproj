@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\EldritchDungeon.Core\EldritchDungeon.Core.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.Entities\EldritchDungeon.Entities.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.World\EldritchDungeon.World.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.Utilities\EldritchDungeon.Utilities.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
