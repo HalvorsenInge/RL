@@ -38,6 +38,16 @@ public static class GameConstants
     // Dungeon
     public const int MaxDungeonLevel = 25;
 
+    // Map generation
+    public const int MapWidth = 80;
+    public const int MapHeight = 21; // 4 rows reserved for HUD
+    public const int MinRoomSize = 5;
+    public const int MaxRoomSize = 13;
+    public const int MaxRooms = 15;
+    public const int DefaultFovRadius = 8;
+    public const int MonstersPerRoomMin = 0;
+    public const int MonstersPerRoomMax = 3;
+
     // Character glyphs
     public const char PlayerGlyph = '@';
     public const char WallGlyph = '#';

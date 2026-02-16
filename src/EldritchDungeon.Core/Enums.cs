@@ -105,3 +105,18 @@ public enum StatusEffectType
     Blessed,
     Cursed
 }
+
+public enum TileType
+{
+    Wall,
+    Floor,
+    Door,
+    StairsDown,
+    StairsUp
+}
+
+public enum MonsterAIState
+{
+    Idle,
+    Aggressive
+}

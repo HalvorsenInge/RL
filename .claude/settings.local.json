@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dotnet --version:*)"
+      "Bash(dotnet --version:*)",
+      "Bash(dotnet build:*)",
+      "Bash(export PATH=\"$PATH:/mnt/c/Program Files/dotnet\")",
+      "Bash(\"/mnt/c/Program Files/dotnet/dotnet.exe\" --version)",
+      "Bash(cmd.exe /c \"dotnet --version\")",
+      "Bash(apt list:*)",
+      "Bash(snap list:*)"
     ]
   }
 }
