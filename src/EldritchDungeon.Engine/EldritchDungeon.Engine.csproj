@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EldritchDungeon.Core\EldritchDungeon.Core.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.Entities\EldritchDungeon.Entities.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.Data\EldritchDungeon.Data.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.World\EldritchDungeon.World.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.Generation\EldritchDungeon.Generation.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.Systems\EldritchDungeon.Systems.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.UI\EldritchDungeon.UI.csproj" />
+    <ProjectReference Include="..\EldritchDungeon.Utilities\EldritchDungeon.Utilities.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RogueSharp" Version="4.2.0" />
+  </ItemGroup>
+
+</Project>
