@@ -52,4 +52,18 @@ public class StatsComponent : IComponent
         StatType.Charisma => Charisma,
         _ => throw new ArgumentOutOfRangeException(nameof(stat))
     };
+
+    public void SetStat(StatType stat, int value)
+    {
+        switch (stat)
+        {
+            case StatType.Strength: Strength = value; break;
+            case StatType.Dexterity: Dexterity = value; break;
+            case StatType.Constitution: Constitution = value; break;
+            case StatType.Intelligence: Intelligence = value; break;
+            case StatType.Wisdom: Wisdom = value; break;
+            case StatType.Charisma: Charisma = value; break;
+            default: throw new ArgumentOutOfRangeException(nameof(stat));
+        }
+    }
 }

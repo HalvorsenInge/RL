@@ -49,6 +49,7 @@ public class MonsterPlacer
             Name = definition.Name,
             Glyph = definition.Glyph,
             Tier = definition.Tier,
+            Damage = definition.Damage,
             XpValue = definition.XpValue,
             SanityDamage = definition.SanityDamage
         };

@@ -7,6 +7,15 @@ namespace EldritchDungeon.Systems;
 
 public class AISystem : GameSystem
 {
+    private readonly CombatSystem? _combatSystem;
+
+    public AISystem() { }
+
+    public AISystem(CombatSystem combatSystem)
+    {
+        _combatSystem = combatSystem;
+    }
+
     public override void Update(DungeonMap map)
     {
         if (map.Player == null)
@@ -14,6 +23,9 @@ public class AISystem : GameSystem
 
         foreach (var monster in map.Monsters.ToList())
         {
+            if (StatusEffectSystem.IsIncapacitated(monster))
+                continue;
+
             UpdateMonster(map, monster);
         }
     }
@@ -29,16 +41,17 @@ public class AISystem : GameSystem
         {
             MoveTowardPlayer(map, monster);
         }
-        // else: idle, do nothing
     }
 
     private void MoveTowardPlayer(DungeonMap map, Monster monster)
     {
         var player = map.Player!;
 
-        // Already adjacent — stop (no combat in Phase 3)
         if (IsAdjacent(monster.X, monster.Y, player.X, player.Y))
+        {
+            _combatSystem?.MonsterAttack(monster, player);
             return;
+        }
 
         try
         {
@@ -50,13 +63,11 @@ public class AISystem : GameSystem
             if (path.Length > 1)
             {
                 var nextStep = path.StepForward();
-                // Skip the first cell (monster's current position)
                 if (nextStep.X == monster.X && nextStep.Y == monster.Y)
                 {
                     nextStep = path.StepForward();
                 }
 
-                // Don't step onto the player
                 if (nextStep.X == player.X && nextStep.Y == player.Y)
                     return;
 
@@ -65,7 +76,7 @@ public class AISystem : GameSystem
         }
         catch (PathNotFoundException)
         {
-            // No path available — stay in place
+            // No path available
         }
     }
 

@@ -1,5 +1,6 @@
 using EldritchDungeon.Core;
 using EldritchDungeon.Entities;
+using EldritchDungeon.Entities.Items;
 using RogueSharp;
 
 namespace EldritchDungeon.World;
@@ -11,6 +12,7 @@ public class DungeonMap : Map
     public List<Room> Rooms { get; } = new();
     public List<Stairs> StairsList { get; } = new();
     public List<Monster> Monsters { get; } = new();
+    public List<(Item Item, int X, int Y)> Items { get; } = new();
     public Player? Player { get; set; }
 
     public DungeonMap()
@@ -88,6 +90,24 @@ public class DungeonMap : Map
     public Monster? GetMonsterAt(int x, int y)
     {
         return Monsters.FirstOrDefault(m => m.X == x && m.Y == y);
+    }
+
+    public List<Item> GetItemsAt(int x, int y)
+    {
+        return Items.Where(i => i.X == x && i.Y == y).Select(i => i.Item).ToList();
+    }
+
+    public void AddItem(Item item, int x, int y)
+    {
+        Items.Add((item, x, y));
+    }
+
+    public bool RemoveItem(Item item, int x, int y)
+    {
+        var index = Items.FindIndex(i => i.Item == item && i.X == x && i.Y == y);
+        if (index < 0) return false;
+        Items.RemoveAt(index);
+        return true;
     }
 
     public void UpdateFov(int x, int y, int radius)

@@ -1,4 +1,5 @@
 using EldritchDungeon.Core;
+using EldritchDungeon.Entities.Items;
 using EldritchDungeon.Utilities;
 using EldritchDungeon.World;
 
@@ -9,6 +10,7 @@ public class GameScreen : Screen
     private readonly ASCIIRenderer _renderer;
     private DungeonMap? _map;
     private int _dungeonLevel;
+    private IReadOnlyList<string>? _messages;
 
     public GameScreen(ASCIIRenderer renderer)
     {
@@ -21,6 +23,11 @@ public class GameScreen : Screen
         _dungeonLevel = dungeonLevel;
     }
 
+    public void SetMessages(IReadOnlyList<string> messages)
+    {
+        _messages = messages;
+    }
+
     public override void Render()
     {
         if (_map == null)
@@ -29,12 +36,14 @@ public class GameScreen : Screen
         _renderer.Clear();
         RenderMap();
         RenderHud();
+        RenderMessages();
         _renderer.Flush();
     }
 
-    public override void HandleInput(ConsoleKeyInfo keyInfo)
+    public override ScreenResult HandleInput(ConsoleKeyInfo keyInfo)
     {
-        // Input handling deferred to Phase 4+
+        // Input handling delegated to InputHandler in Engine
+        return ScreenResult.None;
     }
 
     private void RenderMap()
@@ -58,6 +67,26 @@ public class GameScreen : Screen
                         ? ColorPalette.ExploredWall
                         : ColorPalette.ExploredFloor;
                     _renderer.Set(x, y, glyph, color);
+                }
+            }
+        }
+
+        // Render items in FOV
+        foreach (var (item, ix, iy) in _map.Items)
+        {
+            if (ix < _map.Width && iy < GameConstants.MapHeight)
+            {
+                var itemTile = _map.GetTile(ix, iy);
+                if (itemTile.IsInFov)
+                {
+                    var color = item switch
+                    {
+                        Weapon => ConsoleColor.Cyan,
+                        Armor => ConsoleColor.DarkCyan,
+                        Consumable => ConsoleColor.Green,
+                        _ => ConsoleColor.White
+                    };
+                    _renderer.Set(ix, iy, item.Glyph, color);
                 }
             }
         }
@@ -89,21 +118,54 @@ public class GameScreen : Screen
         var player = _map.Player;
         int hudRow = GameConstants.MapHeight;
 
+        // Row 1: Resources
         _renderer.WriteString(0, hudRow,
-            $"HP: {player.Health.CurrentHp}/{player.Health.MaxHp}",
+            $"HP:{player.Health.CurrentHp}/{player.Health.MaxHp}",
             ConsoleColor.Red);
 
-        _renderer.WriteString(20, hudRow,
-            $"Mana: {player.Mana.CurrentMana}/{player.Mana.MaxMana}",
+        _renderer.WriteString(16, hudRow,
+            $"MP:{player.Mana.CurrentMana}/{player.Mana.MaxMana}",
             ConsoleColor.Blue);
 
-        _renderer.WriteString(42, hudRow,
-            $"Sanity: {player.Sanity.CurrentSanity}/{player.Sanity.MaxSanity}",
-            ConsoleColor.Magenta);
+        var sanityColor = player.Sanity.State switch
+        {
+            SanityState.Stable => ConsoleColor.Magenta,
+            SanityState.Fractured => ConsoleColor.DarkMagenta,
+            SanityState.Unraveling => ConsoleColor.DarkRed,
+            _ => ConsoleColor.Red
+        };
+        _renderer.WriteString(30, hudRow,
+            $"San:{player.Sanity.CurrentSanity}/{player.Sanity.MaxSanity}",
+            sanityColor);
 
-        _renderer.WriteString(66, hudRow,
-            $"Dlvl: {_dungeonLevel}",
+        _renderer.WriteString(48, hudRow,
+            $"Lv:{player.Stats.Level} XP:{player.Stats.Experience}/{player.Stats.ExperienceToNextLevel}",
+            ConsoleColor.Cyan);
+
+        _renderer.WriteString(74, hudRow,
+            $"Dl:{_dungeonLevel}",
             ConsoleColor.White);
+    }
+
+    private void RenderMessages()
+    {
+        if (_messages == null || _messages.Count == 0)
+            return;
+
+        int startRow = GameConstants.MapHeight + 1;
+        int maxMessages = Math.Min(3, _messages.Count);
+
+        for (int i = 0; i < maxMessages; i++)
+        {
+            int msgIndex = _messages.Count - maxMessages + i;
+            if (msgIndex >= 0 && msgIndex < _messages.Count)
+            {
+                string msg = _messages[msgIndex];
+                if (msg.Length > GameConstants.ScreenWidth)
+                    msg = msg[..GameConstants.ScreenWidth];
+                _renderer.WriteString(0, startRow + i, msg, ConsoleColor.Gray);
+            }
+        }
     }
 
     private static ConsoleColor GetTileColor(TileType type)

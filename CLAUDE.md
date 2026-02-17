@@ -13,14 +13,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **UI**: Pure ASCII console with double-buffered rendering
 - **Save System**: JSON serialization
 
-## Build & Run Commands (once scaffolded)
+## Build & Run Commands
 
-```bash
-dotnet build EldritchDungeon.sln
-dotnet run --project src/EldritchDungeon.Engine
-dotnet test                                    # all tests
-dotnet test tests/EldritchDungeon.Core.Tests   # single test project
-```
+**Important:** `dotnet` is not on the default PATH in this WSL environment. Do NOT attempt to run `dotnet build`, `dotnet test`, or `dotnet run` — they will fail with "command not found". The user builds and tests outside of Claude Code.
 
 ## Architecture
 
