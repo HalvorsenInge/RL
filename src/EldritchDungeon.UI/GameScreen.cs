@@ -11,6 +11,8 @@ public class GameScreen : Screen
     private DungeonMap? _map;
     private int _dungeonLevel;
     private IReadOnlyList<string>? _messages;
+    private int? _cursorX;
+    private int? _cursorY;
 
     public GameScreen(ASCIIRenderer renderer)
     {
@@ -26,6 +28,16 @@ public class GameScreen : Screen
     public void SetMessages(IReadOnlyList<string> messages)
     {
         _messages = messages;
+    }
+
+    /// <summary>
+    /// Sets the targeting cursor position. Pass null to clear.
+    /// The cursor is rendered as '*' in yellow on the map.
+    /// </summary>
+    public void SetTargetCursor(int? x, int? y)
+    {
+        _cursorX = x;
+        _cursorY = y;
     }
 
     public override void Render()
@@ -107,6 +119,14 @@ public class GameScreen : Screen
         {
             _renderer.Set(_map.Player.X, _map.Player.Y,
                 _map.Player.Glyph, ColorPalette.Player);
+        }
+
+        // Render targeting cursor (drawn last so it's always visible)
+        if (_cursorX.HasValue && _cursorY.HasValue
+            && _cursorX.Value >= 0 && _cursorX.Value < GameConstants.ScreenWidth
+            && _cursorY.Value >= 0 && _cursorY.Value < GameConstants.MapHeight)
+        {
+            _renderer.Set(_cursorX.Value, _cursorY.Value, '*', ConsoleColor.Yellow);
         }
     }
 

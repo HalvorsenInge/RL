@@ -28,7 +28,7 @@ public class ReligionSystemTests
     {
         var player = CreateTestPlayer(GodType.Cthulhu);
 
-        _religion.Pray(player);
+        _religion.Pray(player, 55);
 
         Assert.Equal(2, player.Religion.Favor);
         Assert.Contains(_messages, m => m.Contains("Cthulhu"));
@@ -39,7 +39,7 @@ public class ReligionSystemTests
     {
         var player = CreateTestPlayer();
 
-        _religion.Pray(player);
+        _religion.Pray(player, 0);
 
         Assert.Equal(0, player.Religion.Favor);
         Assert.Contains(_messages, m => m.Contains("no god"));
@@ -72,9 +72,9 @@ public class ReligionSystemTests
     {
         var player = CreateTestPlayer(GodType.Hastur);
 
-        _religion.Pray(player);
-        _religion.Pray(player);
-        _religion.Pray(player);
+        _religion.Pray(player, 55);
+        _religion.Pray(player, 55);
+        _religion.Pray(player, 55);
 
         Assert.Equal(6, player.Religion.Favor);
     }

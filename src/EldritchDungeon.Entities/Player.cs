@@ -37,7 +37,8 @@ public class Player : Actor
         double sanityMultiplier,
         int baseHp,
         int baseMana,
-        int startingGold)
+        int startingGold,
+        int[]? preRolledStats = null)
     {
         var player = new Player
         {
@@ -49,8 +50,8 @@ public class Player : Actor
 
         player.InitializeComponents();
 
-        // Roll and apply stats
-        var scores = Dice.RollAbilityScores();
+        // Use pre-rolled stats if provided, otherwise roll new ones
+        var scores = preRolledStats ?? Dice.RollAbilityScores();
         player.Stats.SetBaseScores(scores);
         player.Stats.ApplyRacialModifiers(
             racialModifiers[0], racialModifiers[1], racialModifiers[2],

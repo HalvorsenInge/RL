@@ -83,6 +83,95 @@ public class CombatSystem
         }
     }
 
+    /// <summary>
+    /// Resolves a ranged attack from <paramref name="player"/> toward the given map cell.
+    /// Returns true when a full turn was consumed (hit or miss), false when the action
+    /// was rejected before spending any turn (wrong weapon, empty target, etc.).
+    /// Ammo is only decremented on a successful attack roll attempt.
+    /// </summary>
+    public bool ShootRanged(Player player, int targetX, int targetY, DungeonMap map)
+    {
+        var weapon = player.Equipment.GetEquipped(EquipmentSlot.MainHand) as Weapon;
+
+        if (weapon == null || weapon.Range <= 1)
+        {
+            _log("You have no ranged weapon equipped.");
+            return false;
+        }
+
+        if (weapon.MaxAmmo > 0 && weapon.CurrentAmmo <= 0)
+        {
+            _log($"Your {weapon.Name} is out of ammunition!");
+            return false;
+        }
+
+        // Range check — Chebyshev distance matches diagonal movement cost
+        int dist = Math.Max(Math.Abs(targetX - player.X), Math.Abs(targetY - player.Y));
+        if (dist > weapon.Range)
+        {
+            _log($"That target is out of range! (Range: {weapon.Range}, Distance: {dist})");
+            return false;
+        }
+
+        if (!map.HasLineOfSight(player.X, player.Y, targetX, targetY))
+        {
+            _log("You don't have a clear line of sight to that target.");
+            return false;
+        }
+
+        var monster = map.GetMonsterAt(targetX, targetY);
+        if (monster == null)
+        {
+            _log("There is no target there.");
+            return false;
+        }
+
+        // Consume ammo before rolling (intentional: misfire still uses a round)
+        if (weapon.MaxAmmo > 0)
+            weapon.CurrentAmmo--;
+
+        int statMod    = player.Stats.GetModifier(StatType.Dexterity);
+        int naturalRoll = Dice.Roll(1, 20);
+        int attackRoll  = naturalRoll + statMod;
+        int monsterAC   = 10 + monster.Tier;
+
+        if (naturalRoll == 1)
+        {
+            _log($"You fire your {weapon.Name} at the {monster.Name} and miss badly!");
+            return true;
+        }
+
+        bool isHit = naturalRoll == 20 || attackRoll >= monsterAC;
+        if (!isHit)
+        {
+            _log($"You fire your {weapon.Name} at the {monster.Name} but miss. ({attackRoll} vs AC {monsterAC})");
+            return true;
+        }
+
+        bool isCrit       = naturalRoll >= weapon.CritRangeMin;
+        int  totalDamage  = weapon.Damage + statMod;
+        if (isCrit)
+            totalDamage *= weapon.CritMultiplier;
+        if (totalDamage < 1)
+            totalDamage = 1;
+
+        monster.Health.TakeDamage(totalDamage);
+
+        if (isCrit)
+            _log($"CRITICAL HIT! You shoot the {monster.Name} for {totalDamage} damage!");
+        else
+            _log($"You shoot the {monster.Name} with your {weapon.Name} for {totalDamage} damage.");
+
+        if (monster.Health.IsDead)
+        {
+            _log($"The {monster.Name} is slain! (+{monster.XpValue} XP)");
+            map.Monsters.Remove(monster);
+            player.Stats.Experience += monster.XpValue;
+        }
+
+        return true;
+    }
+
     public void MonsterAttack(Monster monster, Player player)
     {
         int naturalRoll = Dice.Roll(1, 20);

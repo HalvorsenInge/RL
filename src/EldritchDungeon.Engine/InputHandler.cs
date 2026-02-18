@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using EldritchDungeon.Core;
 using EldritchDungeon.Entities;
 using EldritchDungeon.Systems;
@@ -53,7 +54,7 @@ public class InputHandler
             case 'g':
                 return TryPickup(player, map);
             case 'p':
-                _engine.ReligionSystem.Pray(player);
+                _engine.ReligionSystem.Pray(player, new Random().Next(101));
                 return true;
             case 'S':
                 SaveManager.Save(_engine);
@@ -140,7 +141,7 @@ public class InputHandler
 
     private bool TryAscend(Player player, DungeonMap map)
     {
-        var stairs = map.StairsList.FirstOrDefault(s => !s.IsDown && s.X == player.X && s.Y == player.Y);
+        Stairs stairs = map.StairsList.FirstOrDefault(s => !s.IsDown && s.X == player.X && s.Y == player.Y);
         if (stairs != null)
         {
             _engine.Log.Add("You cannot ascend further. Press on!");

@@ -10,4 +10,13 @@ public class GodDefinition
     public string FavorBonus { get; init; } = string.Empty;
     public string AngerTrigger { get; init; } = string.Empty;
     public List<GodPower> Powers { get; init; } = new();
+
+    /// <summary>Passive per-turn blessing granted by favor tier. Null if no per-turn effect.</summary>
+    public GodBlessingEffect? Blessing { get; init; }
+
+    /// <summary>
+    /// Anger-threshold punishments, sorted ascending by AngerThreshold.
+    /// ReligionSystem picks the highest tier whose threshold is met.
+    /// </summary>
+    public List<GodWrathEffect> WrathEffects { get; init; } = new();
 }

@@ -41,6 +41,15 @@ public class HelpScreen : Screen
         row++;
 
         _renderer.WriteString(40, row, "  Bump      Attack (walk into enemy)", ConsoleColor.White);
+        row++;
+
+        _renderer.WriteString(40, row, "  f         Fire / Shoot (ranged weapon)", ConsoleColor.White);
+        row++;
+
+        _renderer.WriteString(40, row, "  t         Throw          (not yet impl.)", ConsoleColor.DarkGray);
+        row++;
+
+        _renderer.WriteString(40, row, "  g         Pick Up / Get", ConsoleColor.White);
         row += 2;
 
         // Screens

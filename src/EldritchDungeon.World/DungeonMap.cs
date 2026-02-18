@@ -110,6 +110,45 @@ public class DungeonMap : Map
         return true;
     }
 
+    /// <summary>
+    /// Returns true if there is an unobstructed line between (x1,y1) and (x2,y2).
+    /// Uses Bresenham line and checks that all intermediate cells are transparent.
+    /// </summary>
+    public bool HasLineOfSight(int x1, int y1, int x2, int y2)
+    {
+        int dx = Math.Abs(x2 - x1);
+        int dy = Math.Abs(y2 - y1);
+        int sx = x1 < x2 ? 1 : -1;
+        int sy = y1 < y2 ? 1 : -1;
+        int err = dx - dy;
+        int cx = x1, cy = y1;
+
+        while (true)
+        {
+            // Only check cells that are neither the source nor the destination
+            bool isSource = cx == x1 && cy == y1;
+            bool isDest   = cx == x2 && cy == y2;
+
+            if (!isSource && !isDest)
+            {
+                if (cx >= 0 && cx < Width && cy >= 0 && cy < Height)
+                {
+                    if (!GetCell(cx, cy).IsTransparent)
+                        return false;
+                }
+            }
+
+            if (isDest)
+                break;
+
+            int e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; cx += sx; }
+            if (e2 <  dx) { err += dx; cy += sy; }
+        }
+
+        return true;
+    }
+
     public void UpdateFov(int x, int y, int radius)
     {
         // Clear previous FOV

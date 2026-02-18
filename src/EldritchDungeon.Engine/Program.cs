@@ -1,9 +1,3 @@
-using EldritchDungeon.Core;
-using EldritchDungeon.Data.Classes;
-using EldritchDungeon.Data.Items;
-using EldritchDungeon.Data.Races;
-using EldritchDungeon.Entities;
-using EldritchDungeon.Entities.Items;
 using EldritchDungeon.Engine;
 using EldritchDungeon.UI;
 
@@ -12,6 +6,7 @@ Console.Title = "Eldritch Dungeon";
 Console.CursorVisible = false;
 
 var engine = new GameEngine();
+var renderer = new ASCIIRenderer();
 
 // Check for existing save
 if (SaveManager.SaveExists())
@@ -38,24 +33,22 @@ if (SaveManager.SaveExists())
             Console.WriteLine("Save file corrupted. Starting new game...");
             SaveManager.DeleteSave();
             Thread.Sleep(1500);
-            StartNewGame(engine);
+            if (!StartNewGame(engine, renderer)) return;
             break;
         }
         else if (key.KeyChar is 'n' or 'N')
         {
             SaveManager.DeleteSave();
-            StartNewGame(engine);
+            if (!StartNewGame(engine, renderer)) return;
             break;
         }
     }
 }
 else
 {
-    StartNewGame(engine);
+    Console.Clear();
+    if (!StartNewGame(engine, renderer)) return;
 }
-
-// Set up rendering
-var renderer = new ASCIIRenderer();
 
 // Run game
 var loop = new GameLoop(engine, renderer);
@@ -65,33 +58,14 @@ Console.CursorVisible = true;
 Console.Clear();
 Console.WriteLine("Thanks for playing Eldritch Dungeon!");
 
-static void StartNewGame(GameEngine engine)
+static bool StartNewGame(GameEngine engine, ASCIIRenderer renderer)
 {
-    // Create test character: Human Warrior
-    var raceDef = RaceDatabase.Get(RaceType.Human);
-    var classDef = ClassDatabase.Get(ClassType.Warrior);
+    var creation = new CharacterCreationScreen(renderer);
+    var player = creation.Run();
 
-    var player = Player.CreateCharacter(
-        "Adventurer",
-        raceDef.Type,
-        classDef.Type,
-        raceDef.GetStatModifiers(),
-        raceDef.HpMultiplier,
-        raceDef.ManaMultiplier,
-        raceDef.SanityMultiplier,
-        classDef.BaseHp,
-        classDef.BaseMana,
-        classDef.StartingGold);
+    if (player == null)
+        return false;
 
-    // Equip starting gear
-    var longsword = WeaponDatabase.Get("Longsword");
-    if (longsword != null)
-        player.Equipment.Equip(EquipmentSlot.MainHand, longsword);
-
-    var chainmail = ArmorDatabase.Get("Chainmail");
-    if (chainmail != null)
-        player.Equipment.Equip(EquipmentSlot.Body, chainmail);
-
-    // Set up engine
     engine.Initialize(player);
+    return true;
 }

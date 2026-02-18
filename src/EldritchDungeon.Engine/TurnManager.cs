@@ -22,13 +22,17 @@ public class TurnManager
         // 1. Status effects on player
         _engine.StatusEffectSystem.ProcessActor(player);
 
-        // 2. Check sanity from visible monsters
+        // 2. Divine blessings (HP/mana regen, sanity resist) and wrath punishments
+        _engine.ReligionSystem.ApplyBlessings(player);
+        _engine.ReligionSystem.ApplyWrath(player);
+
+        // 3. Check sanity from visible monsters
         _engine.SanitySystem.Update(map);
 
-        // 3. AI moves/attacks monsters
+        // 4. AI moves/attacks monsters
         _engine.AISystem.Update(map);
 
-        // 4. Addiction check
+        // 5. Addiction check
         _engine.AddictionSystem.Update(player);
 
         // 5. Update FOV

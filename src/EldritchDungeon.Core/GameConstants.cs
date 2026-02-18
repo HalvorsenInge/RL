@@ -35,6 +35,11 @@ public static class GameConstants
     public const int FavorTier3 = 75;
     public const int FavorTier4 = 100;
 
+    // Wrath thresholds
+    public const int WrathMinorThreshold = 1;    // 1-33: whispers, minor sanity drain
+    public const int WrathModerateThreshold = 34; // 34-66: HP+sanity drain
+    public const int WrathSevereThreshold = 67;   // 67+: heavy punishment, cursed
+
     // Dungeon
     public const int MaxDungeonLevel = 25;
 
