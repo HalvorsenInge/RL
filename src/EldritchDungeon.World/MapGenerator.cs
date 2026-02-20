@@ -27,7 +27,7 @@ public class MapGenerator
         _random = random ?? new Random();
     }
 
-    public DungeonMap Generate()
+    public DungeonMap Generate(int dungeonLevel = 1)
     {
         var map = new DungeonMap();
         map.InitializeTiles(_width, _height);
@@ -76,6 +76,13 @@ public class MapGenerator
             var lastRoom = map.Rooms[^1];
             map.SetTile(lastRoom.CenterX, lastRoom.CenterY, TileType.StairsDown);
             map.StairsList.Add(new Stairs { X = lastRoom.CenterX, Y = lastRoom.CenterY, IsDown = true });
+
+            // Designate one room in the middle as a shop (not the first or last room)
+            if (map.Rooms.Count >= 3)
+            {
+                int shopIndex = map.Rooms.Count / 2;
+                map.Rooms[shopIndex].IsShop = true;
+            }
         }
 
         return map;

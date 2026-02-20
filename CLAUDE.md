@@ -52,6 +52,37 @@ tests/
   EldritchDungeon.Data.Tests/
 ```
 
+## Spell System
+
+Spells are defined in `src/EldritchDungeon.Data/Spells/SpellDatabase.cs` and cast by `MagicSystem` in Systems. Key facts:
+
+- `Player.KnownSpells` is a `List<SpellId>` in discovery order — persisted to save files.
+- **Mage** starts with Fireball, Magic Bolt, Mage Armor. **Cultist** starts with Void Bolt, Magic Bolt.
+- Key `m` opens the Spellbook. Targeted spells use the same cursor system as ranged weapons.
+- Broken sanity (0-9) prevents spellcasting.
+
+### Tile Effects (terrain interactions)
+
+`Tile.Effect` (TileEffect enum) + `Tile.EffectDuration` track environmental hazards:
+
+| Effect | Glyph | Notes |
+|--------|-------|-------|
+| Water  | `~`   | Permanent. Conducts lightning. Extinguished by cold. |
+| Fire   | `^`   | 8–10 turns. 5 dmg/turn to actors on it. |
+| Steam  | `*`   | 5 turns. Blocks FOV/LOS. |
+| Oil    | `%`   | Permanent. Fire/lightning ignites it (explosion). |
+
+**Interaction matrix**: Fire+Water→Steam; Fire+Oil→Explosion; Lightning+Water→Electric shock (flood-fill); Lightning+Oil→Fire; Cold+Fire→Extinguish.
+
+### Super Spells
+
+Super spells (`IsSuperSpell = true` in SpellDefinition) are high-cost, dramatic level-wide effects. They appear distinctly in the Spellbook UI with `[SUPER]` tag. New super spells are added to `SpellId` enum and `SpellDatabase`, and handled as special cases in `MagicSystem.CastSpell`.
+
+**Current super spells:**
+- `EyeInTheSky` (50 MP) — Reveals every monster (name, HP, position) and item on the level. Itemized report added to the message log; log opens automatically after casting.
+
+When the user announces a new super spell, add it to `SpellId`, `SpellDatabase`, and `MagicSystem`. Handle the display result (screen or log) consistently with existing super spells.
+
 ## Design Reference
 
 All game data (racial modifiers, class starting equipment, weapon stats, monster stats, god powers, sanity thresholds) is fully specified in `plan.md`. Consult it before implementing any game content — do not invent stats or mechanics.

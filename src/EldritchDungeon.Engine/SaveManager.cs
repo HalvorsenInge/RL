@@ -5,6 +5,7 @@ using EldritchDungeon.Entities;
 using EldritchDungeon.Entities.Components;
 using EldritchDungeon.Entities.Items;
 using EldritchDungeon.World;
+// SpellId lives in EldritchDungeon.Core so no extra using needed
 
 namespace EldritchDungeon.Engine;
 
@@ -43,6 +44,10 @@ public class SavedItem
     public int SanityAmount { get; set; }
     public int AddictionRisk { get; set; }
 
+    // Enchantment fields (Weapon only)
+    public int MagicDamage { get; set; }
+    public string EnchantmentName { get; set; } = string.Empty;
+
     // Common
     public double Weight { get; set; }
     public int Value { get; set; }
@@ -50,6 +55,13 @@ public class SavedItem
     // Position (for map items)
     public int X { get; set; }
     public int Y { get; set; }
+}
+
+public class SavedShop
+{
+    public int X { get; set; }
+    public int Y { get; set; }
+    public List<SavedItem> Inventory { get; set; } = new();
 }
 
 public class SavedMonster
@@ -126,6 +138,9 @@ public class SaveData
     // Status effects
     public List<SavedStatusEffect> StatusEffects { get; set; } = new();
 
+    // Known spells
+    public List<SpellId> KnownSpells { get; set; } = new();
+
     // Inventory & Equipment
     public List<SavedItem> InventoryItems { get; set; } = new();
     public Dictionary<string, SavedItem?> EquippedItems { get; set; } = new();
@@ -139,6 +154,7 @@ public class SaveData
     public List<SavedStairs> Stairs { get; set; } = new();
     public List<SavedMonster> Monsters { get; set; } = new();
     public List<SavedItem> MapItems { get; set; } = new();
+    public List<SavedShop> Shops { get; set; } = new();
 
     // Message log (last N messages)
     public List<string> Messages { get; set; } = new();
@@ -255,6 +271,9 @@ public static class SaveManager
             });
         }
 
+        // Known spells
+        data.KnownSpells.AddRange(player.KnownSpells);
+
         // Inventory
         foreach (var item in player.Inventory.Items)
         {
@@ -327,6 +346,15 @@ public static class SaveManager
             data.MapItems.Add(saved);
         }
 
+        // Shops
+        foreach (var (sx, sy, inv) in map.Shops)
+        {
+            var savedShop = new SavedShop { X = sx, Y = sy };
+            foreach (var item in inv)
+                savedShop.Inventory.Add(SerializeItem(item));
+            data.Shops.Add(savedShop);
+        }
+
         // Messages (last 50)
         var messages = engine.Log.Messages;
         int start = Math.Max(0, messages.Count - 50);
@@ -358,6 +386,8 @@ public static class SaveManager
                 saved.CurrentAmmo = w.CurrentAmmo;
                 saved.Category = w.Category;
                 saved.Special = w.Special;
+                saved.MagicDamage = w.MagicDamage;
+                saved.EnchantmentName = w.EnchantmentName;
                 break;
             case Armor a:
                 saved.ItemKind = "Armor";
@@ -396,6 +426,8 @@ public static class SaveManager
                 CurrentAmmo = saved.CurrentAmmo,
                 Category = saved.Category,
                 Special = saved.Special,
+                MagicDamage = saved.MagicDamage,
+                EnchantmentName = saved.EnchantmentName,
                 Weight = saved.Weight,
                 Value = saved.Value
             },

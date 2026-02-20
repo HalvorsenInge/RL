@@ -9,6 +9,7 @@ public class Room
 
     public int CenterX => X + Width / 2;
     public int CenterY => Y + Height / 2;
+    public bool IsShop { get; set; }
 
     public bool Intersects(Room other)
     {

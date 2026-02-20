@@ -1,4 +1,5 @@
 using EldritchDungeon.Core;
+using EldritchDungeon.Data.Spells;
 using EldritchDungeon.Entities.Items;
 using EldritchDungeon.UI;
 
@@ -15,14 +16,20 @@ public class GameLoop
     private readonly MessageScreen _messageScreen;
     private readonly HelpScreen _helpScreen;
     private readonly LookScreen _lookScreen;
+    private readonly SpellScreen _spellScreen;
+    private readonly ShopScreen _shopScreen;
     private readonly InputHandler _inputHandler;
     private readonly TurnManager _turnManager;
     private Screen? _overlayScreen;
 
-    // Targeting mode state
+    // Ranged weapon targeting
     private bool _isTargeting;
     private int _targetX;
     private int _targetY;
+
+    // Spell targeting
+    private bool _isSpellTargeting;
+    private SpellId? _pendingSpell;
 
     public GameLoop(GameEngine engine, ASCIIRenderer renderer)
     {
@@ -35,6 +42,8 @@ public class GameLoop
         _messageScreen = new MessageScreen(renderer);
         _helpScreen = new HelpScreen(renderer);
         _lookScreen = new LookScreen(renderer);
+        _spellScreen = new SpellScreen(renderer);
+        _shopScreen  = new ShopScreen(renderer);
         _inputHandler = new InputHandler(engine);
         _turnManager = new TurnManager(engine);
     }
@@ -52,7 +61,27 @@ public class GameLoop
 
                 var keyInfo = Console.ReadKey(true);
                 var result = _overlayScreen.HandleInput(keyInfo);
+
+                // Special case: SpellScreen closed — check for a selected spell
+                if (_overlayScreen is SpellScreen ss && result == ScreenResult.Close)
+                {
+                    _overlayScreen = null;
+                    if (ss.SelectedSpell.HasValue)
+                        HandleSpellSelected(ss.SelectedSpell.Value);
+                    continue;
+                }
+
                 HandleScreenResult(result);
+            }
+            else if (_isSpellTargeting)
+            {
+                _gameScreen.SetMap(_engine.Map!, _engine.DungeonLevel);
+                _gameScreen.SetMessages(_engine.Log.Messages);
+                _gameScreen.SetTargetCursor(_targetX, _targetY);
+                _gameScreen.Render();
+
+                var keyInfo = Console.ReadKey(true);
+                HandleSpellTargetingInput(keyInfo);
             }
             else if (_isTargeting)
             {
@@ -73,19 +102,27 @@ public class GameLoop
 
                 var keyInfo = Console.ReadKey(true);
 
-                // Ranged combat keys
+                // Ranged combat
                 if (keyInfo.KeyChar == 'f')
                 {
                     TryStartTargeting();
                     continue;
                 }
+
+                // Spellbook
+                if (keyInfo.KeyChar == 'm')
+                {
+                    TryOpenSpellbook();
+                    continue;
+                }
+
                 if (keyInfo.KeyChar == 't')
                 {
                     _engine.Log.Add("Throwing is not yet implemented.");
                     continue;
                 }
 
-                // Check for screen-opening keys first
+                // Screen-opening keys
                 var screenResult = CheckScreenKeys(keyInfo);
                 if (screenResult != ScreenResult.None)
                 {
@@ -111,14 +148,138 @@ public class GameLoop
 
         // On exit: ironman save on quit, delete on death
         if (_engine.PlayerDied)
-        {
             SaveManager.DeleteSave();
+        else
+            SaveManager.Save(_engine);
+    }
+
+    // ── Spell flow ──────────────────────────────────────────────────────────
+
+    private void TryOpenSpellbook()
+    {
+        var player = _engine.Player;
+        if (player == null) return;
+
+        if (player.KnownSpells.Count == 0)
+        {
+            _engine.Log.Add("You know no spells.");
+            return;
+        }
+
+        _spellScreen.SetPlayer(player);
+        _overlayScreen = _spellScreen;
+    }
+
+    private void TryOpenShop()
+    {
+        var player = _engine.Player;
+        var map    = _engine.Map;
+        if (player == null || map == null) return;
+
+        // Find a shop within 1 tile of the player (Chebyshev distance)
+        int shopIdx = map.Shops.FindIndex(
+            shop => Math.Max(Math.Abs(shop.X - player.X), Math.Abs(shop.Y - player.Y)) <= 1);
+
+        if (shopIdx < 0)
+        {
+            _engine.Log.Add("There is no merchant nearby. (approach the $ symbol)");
+            return;
+        }
+
+        _shopScreen.Set(player, map.Shops[shopIdx].Inventory);
+        _overlayScreen = _shopScreen;
+    }
+
+    private void HandleSpellSelected(SpellId spellId)
+    {
+        var player = _engine.Player!;
+        var map    = _engine.Map!;
+        var spell  = SpellDatabase.Get(spellId);
+
+        if (spell.Target == SpellTarget.Self || spell.Target == SpellTarget.LevelWide)
+        {
+            bool turnTaken = _engine.MagicSystem.CastSpell(player, spellId, player.X, player.Y, map);
+            if (turnTaken)
+            {
+                _turnManager.ProcessTurn();
+                // Open message log automatically after Eye in the Sky
+                if (spellId == SpellId.EyeInTheSky)
+                {
+                    _messageScreen.SetMessages(_engine.Log.Messages);
+                    _overlayScreen = _messageScreen;
+                }
+            }
         }
         else
         {
-            SaveManager.Save(_engine);
+            // Enter spell targeting mode
+            _isSpellTargeting = true;
+            _pendingSpell = spellId;
+            _targetX = player.X;
+            _targetY = player.Y;
+            string hint = spell.Target == SpellTarget.SingleTarget ? "Target an enemy" : "Choose location";
+            _engine.Log.Add($"[{spell.Name}] {hint} — Arrows:Aim  Enter:Cast  Esc:Cancel");
         }
     }
+
+    private void HandleSpellTargetingInput(ConsoleKeyInfo keyInfo)
+    {
+        var player = _engine.Player!;
+        var map    = _engine.Map!;
+
+        if (keyInfo.Key == ConsoleKey.Escape)
+        {
+            _isSpellTargeting = false;
+            _pendingSpell = null;
+            _gameScreen.SetTargetCursor(null, null);
+            _engine.Log.Add("Spell cancelled.");
+            return;
+        }
+
+        if (keyInfo.Key == ConsoleKey.Enter && _pendingSpell.HasValue)
+        {
+            var spell = SpellDatabase.Get(_pendingSpell.Value);
+
+            // Validate targeting for single-target spells
+            if (spell.Target == SpellTarget.SingleTarget)
+            {
+                var targetMonster = map.GetMonsterAt(_targetX, _targetY);
+                if (targetMonster == null)
+                {
+                    _engine.Log.Add("No enemy there — pick a target.");
+                    return;
+                }
+            }
+
+            // Range check
+            int dist = Math.Max(Math.Abs(_targetX - player.X), Math.Abs(_targetY - player.Y));
+            if (spell.Range > 0 && dist > spell.Range)
+            {
+                _engine.Log.Add($"Out of range! ({dist} tiles, max {spell.Range})");
+                return;
+            }
+
+            var spellToCast = _pendingSpell.Value;
+            _isSpellTargeting = false;
+            _pendingSpell = null;
+            _gameScreen.SetTargetCursor(null, null);
+
+            bool turnTaken = _engine.MagicSystem.CastSpell(player, spellToCast, _targetX, _targetY, map);
+            if (turnTaken)
+                _turnManager.ProcessTurn();
+            return;
+        }
+
+        // Move targeting cursor
+        var (dx, dy) = GetCursorDelta(keyInfo);
+        if (dx != 0 || dy != 0)
+        {
+            _targetX = Math.Clamp(_targetX + dx, 0, map.Width  - 1);
+            _targetY = Math.Clamp(_targetY + dy, 0, map.Height - 1);
+        }
+    }
+
+    // ── Ranged weapon targeting (unchanged logic) ────────────────────────────
 
     private ScreenResult CheckScreenKeys(ConsoleKeyInfo keyInfo)
     {
@@ -130,7 +291,8 @@ public class GameLoop
             'M' => ScreenResult.OpenMessages,
             '?' => ScreenResult.OpenHelp,
             'x' => ScreenResult.OpenLook,
-            _ => ScreenResult.None
+            's' => ScreenResult.OpenShop,
+            _   => ScreenResult.None
         };
     }
 
@@ -159,6 +321,12 @@ public class GameLoop
             case ScreenResult.OpenLook:
                 _overlayScreen = _lookScreen;
                 break;
+            case ScreenResult.OpenSpell:
+                TryOpenSpellbook();
+                break;
+            case ScreenResult.OpenShop:
+                TryOpenShop();
+                break;
         }
     }
 
@@ -176,6 +344,8 @@ public class GameLoop
             ms.SetMessages(_engine.Log.Messages);
         else if (_overlayScreen is LookScreen ls)
             ls.SetMap(_engine.Map, _engine.DungeonLevel);
+        else if (_overlayScreen is SpellScreen ss)
+            ss.SetPlayer(_engine.Player);
     }
 
     private void TryStartTargeting()
@@ -213,9 +383,7 @@ public class GameLoop
 
         if (keyInfo.Key == ConsoleKey.Enter)
         {
-            // Capture the monster reference before shooting so we can call kill hooks
             var targetMonster = map.GetMonsterAt(_targetX, _targetY);
-
             bool turnTaken = _engine.CombatSystem.ShootRanged(player, _targetX, _targetY, map);
 
             _isTargeting = false;
@@ -228,13 +396,11 @@ public class GameLoop
                     _engine.ReligionSystem.OnKill(player, targetMonster);
                     _engine.LevelingSystem.CheckLevelUp(player);
                 }
-
                 _turnManager.ProcessTurn();
             }
             return;
         }
 
-        // Move cursor with the same keys as movement
         var (dx, dy) = GetCursorDelta(keyInfo);
         if (dx != 0 || dy != 0)
         {

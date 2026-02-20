@@ -13,6 +13,7 @@ public class DungeonMap : Map
     public List<Stairs> StairsList { get; } = new();
     public List<Monster> Monsters { get; } = new();
     public List<(Item Item, int X, int Y)> Items { get; } = new();
+    public List<(int X, int Y, List<Item> Inventory)> Shops { get; } = new();
     public Player? Player { get; set; }
 
     public DungeonMap()
@@ -148,6 +149,97 @@ public class DungeonMap : Map
 
         return true;
     }
+
+    // ── Tile Effect API ──────────────────────────────────────────────────────
+
+    public TileEffect GetTileEffect(int x, int y)
+    {
+        if (x < 0 || x >= Width || y < 0 || y >= Height) return TileEffect.None;
+        return _tiles[x, y].Effect;
+    }
+
+    /// <summary>
+    /// Sets a tile effect at (x, y). duration=-1 means permanent.
+    /// Steam blocks line-of-sight; setting or clearing it updates RogueSharp cell transparency.
+    /// </summary>
+    public void SetTileEffect(int x, int y, TileEffect effect, int duration = -1)
+    {
+        if (x < 0 || x >= Width || y < 0 || y >= Height) return;
+        var tile = _tiles[x, y];
+        if (tile.Type == TileType.Wall) return;
+
+        var oldEffect = tile.Effect;
+        tile.Effect = effect;
+        tile.EffectDuration = duration;
+
+        // Keep RogueSharp transparency in sync for Steam (blocks FOV/LOS)
+        bool wasBlocking = oldEffect == TileEffect.Steam;
+        bool nowBlocking = effect == TileEffect.Steam;
+        if (wasBlocking != nowBlocking)
+        {
+            bool transparent = tile.Type != TileType.Wall && !nowBlocking;
+            bool walkable = tile.Type != TileType.Wall;
+            SetCellProperties(x, y, transparent, walkable);
+        }
+    }
+
+    /// <summary>
+    /// Ticks all tile effects down by one turn and clears expired ones.
+    /// Returns a list of (x, y, expiredEffect) for caller to react to.
+    /// </summary>
+    public List<(int X, int Y, TileEffect Effect)> TickTileEffects()
+    {
+        var expired = new List<(int, int, TileEffect)>();
+        for (int x = 0; x < Width; x++)
+        {
+            for (int y = 0; y < Height; y++)
+            {
+                var tile = _tiles[x, y];
+                if (tile.Effect == TileEffect.None || tile.EffectDuration == -1) continue;
+
+                tile.EffectDuration--;
+                if (tile.EffectDuration <= 0)
+                {
+                    var old = tile.Effect;
+                    tile.Effect = TileEffect.None;
+                    // Restore transparency if Steam expired
+                    if (old == TileEffect.Steam)
+                        SetCellProperties(x, y, tile.Type != TileType.Wall, tile.Type != TileType.Wall);
+                    expired.Add((x, y, old));
+                }
+            }
+        }
+        return expired;
+    }
+
+    /// <summary>
+    /// Returns all tiles reachable from (startX, startY) by orthogonal flood-fill that share the Water effect.
+    /// </summary>
+    public List<(int X, int Y)> GetConnectedWaterTiles(int startX, int startY)
+    {
+        var result = new List<(int, int)>();
+        if (GetTileEffect(startX, startY) != TileEffect.Water) return result;
+
+        var visited = new HashSet<(int, int)>();
+        var queue = new Queue<(int, int)>();
+        queue.Enqueue((startX, startY));
+
+        int[] dx = { 0, 0, 1, -1 };
+        int[] dy = { 1, -1, 0, 0 };
+
+        while (queue.Count > 0)
+        {
+            var (cx, cy) = queue.Dequeue();
+            if (!visited.Add((cx, cy))) continue;
+            if (GetTileEffect(cx, cy) != TileEffect.Water) continue;
+            result.Add((cx, cy));
+            for (int i = 0; i < 4; i++)
+                queue.Enqueue((cx + dx[i], cy + dy[i]));
+        }
+        return result;
+    }
+
+    // ── FOV ─────────────────────────────────────────────────────────────────
 
     public void UpdateFov(int x, int y, int radius)
     {

@@ -68,12 +68,14 @@ public class CombatSystem
         if (totalDamage < 1)
             totalDamage = 1;
 
-        monster.Health.TakeDamage(totalDamage);
+        int magicDamage = weapon?.MagicDamage ?? 0;
+        monster.Health.TakeDamage(totalDamage + magicDamage);
 
+        string magicSuffix = magicDamage > 0 ? $" (+{magicDamage} {weapon!.EnchantmentName})" : "";
         if (isCrit)
-            _log($"CRITICAL HIT! You strike the {monster.Name} for {totalDamage} damage!");
+            _log($"CRITICAL HIT! You strike the {monster.Name} for {totalDamage} damage{magicSuffix}!");
         else
-            _log($"You hit the {monster.Name} for {totalDamage} damage.");
+            _log($"You hit the {monster.Name} for {totalDamage} damage{magicSuffix}.");
 
         if (monster.Health.IsDead)
         {

@@ -83,6 +83,27 @@ public class GameScreen : Screen
             }
         }
 
+        // Render tile effects in FOV (over tiles, under entities)
+        for (int ex = 0; ex < _map.Width && ex < GameConstants.ScreenWidth; ex++)
+        {
+            for (int ey = 0; ey < _map.Height && ey < GameConstants.MapHeight; ey++)
+            {
+                var effectTile = _map.GetTile(ex, ey);
+                if (!effectTile.IsInFov) continue;
+                if (effectTile.Effect == TileEffect.None) continue;
+
+                var (glyph, color) = effectTile.Effect switch
+                {
+                    TileEffect.Water => ('~', ConsoleColor.Blue),
+                    TileEffect.Fire  => ('^', ConsoleColor.Red),
+                    TileEffect.Steam => ('*', ConsoleColor.White),
+                    TileEffect.Oil   => ('%', ConsoleColor.DarkYellow),
+                    _                => (' ', ConsoleColor.Black)
+                };
+                _renderer.Set(ex, ey, glyph, color);
+            }
+        }
+
         // Render items in FOV
         foreach (var (item, ix, iy) in _map.Items)
         {
@@ -100,6 +121,19 @@ public class GameScreen : Screen
                     };
                     _renderer.Set(ix, iy, item.Glyph, color);
                 }
+            }
+        }
+
+        // Render shop merchants in FOV
+        foreach (var (sx, sy, _) in _map.Shops)
+        {
+            if (sx < _map.Width && sy < GameConstants.MapHeight)
+            {
+                var shopTile = _map.GetTile(sx, sy);
+                if (shopTile.IsInFov)
+                    _renderer.Set(sx, sy, '$', ConsoleColor.Yellow);
+                else if (shopTile.IsExplored)
+                    _renderer.Set(sx, sy, '$', ConsoleColor.DarkYellow);
             }
         }
 

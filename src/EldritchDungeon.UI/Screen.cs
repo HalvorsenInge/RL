@@ -9,7 +9,9 @@ public enum ScreenResult
     OpenReligion,
     OpenMessages,
     OpenHelp,
-    OpenLook
+    OpenLook,
+    OpenSpell,
+    OpenShop
 }
 
 public abstract class Screen

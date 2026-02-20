@@ -66,7 +66,7 @@ public class InventoryScreen : Screen
 
                 string detail = item switch
                 {
-                    Weapon w => $"Dmg:{w.Damage} Spd:{w.Speed} Rng:{w.Range}",
+                    Weapon w => $"Dmg:{w.Damage}" + (w.MagicDamage > 0 ? $"+{w.MagicDamage}m" : "") + $" Spd:{w.Speed} Rng:{w.Range}",
                     Armor a => $"AC:{a.ArmorClass}",
                     Consumable c => FormatConsumable(c),
                     _ => $"Val:{item.Value}"

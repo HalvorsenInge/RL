@@ -23,11 +23,11 @@ public static class ConsumableDatabase
         // Sanity healing items (with addiction risk)
         ["Sanctified Water"] = new Consumable
         {
-            Name = "Sanctified Water", SanityAmount = 30, AddictionRisk = 0
+            Name = "Sanctified Water", SanityAmount = 30, AddictionRisk = 10
         },
         ["Elixir of Calm"] = new Consumable
         {
-            Name = "Elixir of Calm", SanityAmount = 25, AddictionRisk = 0
+            Name = "Elixir of Calm", SanityAmount = 25, AddictionRisk = 10
         },
         ["Mindcrust"] = new Consumable
         {
@@ -48,6 +48,8 @@ public static class ConsumableDatabase
     };
 
     public static Consumable Get(string name) => _consumables[name];
+
+    public static bool TryGet(string name, out Consumable consumable) => _consumables.TryGetValue(name, out consumable!);
 
     public static IReadOnlyDictionary<string, Consumable> GetAll() => _consumables;
 }

@@ -9,6 +9,9 @@ public class Player : Actor
     public int Gold { get; set; }
     public int AddictionLevel { get; set; }
 
+    /// <summary>Spells the player has learned, in discovery order.</summary>
+    public List<SpellId> KnownSpells { get; } = new();
+
     public Player()
     {
         Glyph = GameConstants.PlayerGlyph;

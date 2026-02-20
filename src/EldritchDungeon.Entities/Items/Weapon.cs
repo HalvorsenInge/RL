@@ -13,6 +13,8 @@ public class Weapon : Item
     public int CurrentAmmo { get; set; }
     public WeaponCategory Category { get; set; }
     public string Special { get; set; } = string.Empty;
+    public int MagicDamage { get; set; }
+    public string EnchantmentName { get; set; } = string.Empty;
 
     public Weapon()
     {

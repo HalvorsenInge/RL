@@ -14,7 +14,45 @@ public enum DamageType
     Mana,
     Sanity,
     Holy,
-    Void
+    Void,
+    Fire,
+    Cold,
+    Lightning
+}
+
+public enum SpellId
+{
+    MagicBolt,
+    Fireball,
+    FrostBolt,
+    LightningBolt,
+    MageArmor,
+    VoidBolt,
+    Teleport,
+    CreateWater,
+    DrainLife,
+    ChainLightning,
+    IceStorm,
+    Meteor,
+    // Super spells
+    EyeInTheSky
+}
+
+public enum SpellTarget
+{
+    Self,
+    SingleTarget,
+    Area,
+    LevelWide
+}
+
+public enum TileEffect
+{
+    None,
+    Water,
+    Fire,
+    Steam,
+    Oil
 }
 
 public enum WeaponCategory

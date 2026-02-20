@@ -1,4 +1,5 @@
 using EldritchDungeon.Core;
+using EldritchDungeon.Data.Items;
 using EldritchDungeon.Entities;
 using EldritchDungeon.Entities.Components;
 using EldritchDungeon.Entities.Items;
@@ -23,6 +24,7 @@ public class GameEngine
     public ReligionSystem ReligionSystem { get; }
     public AddictionSystem AddictionSystem { get; }
     public AISystem AISystem { get; }
+    public MagicSystem MagicSystem { get; }
 
     public GameEngine()
     {
@@ -33,6 +35,7 @@ public class GameEngine
         ReligionSystem = new ReligionSystem(Log.Add);
         AddictionSystem = new AddictionSystem(Log.Add);
         AISystem = new AISystem(CombatSystem);
+        MagicSystem = new MagicSystem(Log.Add);
     }
 
     public void Initialize(Player player)
@@ -114,6 +117,10 @@ public class GameEngine
         {
             player.StatusEffects.AddEffect(effect.Type, effect.RemainingTurns, effect.Magnitude);
         }
+
+        // Known spells
+        foreach (var spell in data.KnownSpells)
+            player.KnownSpells.Add(spell);
 
         // Inventory
         foreach (var saved in data.InventoryItems)
@@ -201,6 +208,13 @@ public class GameEngine
             map.AddItem(SaveManager.DeserializeItem(savedItem), savedItem.X, savedItem.Y);
         }
 
+        // Restore shops
+        foreach (var savedShop in data.Shops)
+        {
+            var inventory = savedShop.Inventory.Select(SaveManager.DeserializeItem).ToList();
+            map.Shops.Add((savedShop.X, savedShop.Y, inventory));
+        }
+
         Map = map;
 
         // Restore FOV
@@ -218,7 +232,7 @@ public class GameEngine
     private void GenerateLevel()
     {
         var generator = new MapGenerator();
-        Map = generator.Generate();
+        Map = generator.Generate(DungeonLevel);
 
         // Place player in first room
         if (Map.Rooms.Count > 0)
@@ -234,6 +248,13 @@ public class GameEngine
         // Place loot
         var lootGen = new LootGenerator();
         lootGen.PlaceLoot(Map, DungeonLevel);
+
+        // Populate shop rooms
+        foreach (var room in Map.Rooms.Where(r => r.IsShop))
+        {
+            var stock = ShopDatabase.GenerateStock(DungeonLevel);
+            Map.Shops.Add((room.CenterX, room.CenterY, stock));
+        }
 
         // Initial FOV
         Map.UpdateFov(Player!.X, Player.Y, GameConstants.DefaultFovRadius);

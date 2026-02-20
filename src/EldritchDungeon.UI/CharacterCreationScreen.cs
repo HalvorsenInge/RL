@@ -4,6 +4,7 @@ using EldritchDungeon.Data.Items;
 using EldritchDungeon.Data.Races;
 using EldritchDungeon.Entities;
 using EldritchDungeon.Entities.Items;
+using EldritchDungeon.Data.Spells;
 
 namespace EldritchDungeon.UI;
 
@@ -144,13 +145,13 @@ public class CharacterCreationScreen
 
             _renderer.WriteString(1, row + i, marker + race.Name.PadRight(18), color);
 
-            // Stat modifiers inline
-            string mods = FormatMod(race.StrMod) + " "
-                        + FormatMod(race.DexMod) + " "
-                        + FormatMod(race.ConMod) + " "
-                        + FormatMod(race.IntMod) + " "
-                        + FormatMod(race.WisMod) + " "
-                        + FormatMod(race.ChaMod);
+            // Stat modifiers inline — each value centered in a 5-char column to align with headers
+            string mods = CenterPad(FormatMod(race.StrMod), 5)
+                        + CenterPad(FormatMod(race.DexMod), 5)
+                        + CenterPad(FormatMod(race.ConMod), 5)
+                        + CenterPad(FormatMod(race.IntMod), 5)
+                        + CenterPad(FormatMod(race.WisMod), 5)
+                        + CenterPad(FormatMod(race.ChaMod), 5);
             _renderer.WriteString(21, row + i, mods, selected ? ConsoleColor.White : ConsoleColor.DarkGray);
         }
 
@@ -461,14 +462,13 @@ public class CharacterCreationScreen
             cls.StartingGold,
             _rolledStats);
 
-        // Equip starting weapons (first goes to MainHand, second to OffHand)
+        // Add all starting weapons to inventory first
         for (int i = 0; i < cls.StartingWeapons.Count; i++)
         {
             try
             {
                 var weapon = WeaponDatabase.Get(cls.StartingWeapons[i]);
-                var slot = i == 0 ? EquipmentSlot.MainHand : EquipmentSlot.OffHand;
-                player.Equipment.Equip(slot, weapon);
+                player.Inventory.AddItem(weapon);
             }
             catch (KeyNotFoundException)
             {
@@ -476,18 +476,76 @@ public class CharacterCreationScreen
             }
         }
 
-        // Equip starting armor
+        // Add starting armor to inventory
         if (!string.IsNullOrEmpty(cls.StartingArmor))
         {
             try
             {
                 var armor = ArmorDatabase.Get(cls.StartingArmor);
-                player.Equipment.Equip(EquipmentSlot.Body, armor);
+                player.Inventory.AddItem(armor);
             }
             catch (KeyNotFoundException)
             {
                 // Armor not in database yet, skip
             }
+        }
+
+        // Add all starting items to inventory (consumables and misc tools/ammo)
+        foreach (var itemName in cls.StartingItems)
+        {
+            try
+            {
+                Item item;
+                if (ConsumableDatabase.TryGet(itemName, out var consumable))
+                    item = consumable;
+                else if (MiscItemDatabase.TryGet(itemName, out var misc))
+                    item = misc;
+                else
+                    continue;
+
+                player.Inventory.AddItem(item);
+            }
+            catch (KeyNotFoundException)
+            {
+                // Item not in database yet, skip
+            }
+        }
+
+        // Now equip weapons from inventory (MainHand first, OffHand second)
+        for (int i = 0; i < cls.StartingWeapons.Count && i < 2; i++)
+        {
+            var slot = i == 0 ? EquipmentSlot.MainHand : EquipmentSlot.OffHand;
+            var weapon = player.Inventory.Items.OfType<Weapon>().FirstOrDefault(w => w.Name == cls.StartingWeapons[i]);
+            if (weapon != null)
+            {
+                player.Equipment.Equip(slot, weapon);
+                player.Inventory.RemoveItem(weapon);
+            }
+        }
+
+        // Equip armor from inventory
+        if (!string.IsNullOrEmpty(cls.StartingArmor))
+        {
+            var armor = player.Inventory.Items.OfType<Armor>().FirstOrDefault(a => a.Name == cls.StartingArmor);
+            if (armor != null)
+            {
+                player.Equipment.Equip(EquipmentSlot.Body, armor);
+                player.Inventory.RemoveItem(armor);
+            }
+        }
+
+        // Grant starting spells by class
+        switch (cls.Type)
+        {
+            case ClassType.Mage:
+                player.KnownSpells.Add(SpellId.Fireball);
+                player.KnownSpells.Add(SpellId.MagicBolt);
+                player.KnownSpells.Add(SpellId.MageArmor);
+                break;
+            case ClassType.Cultist:
+                player.KnownSpells.Add(SpellId.VoidBolt);
+                player.KnownSpells.Add(SpellId.MagicBolt);
+                break;
         }
 
         return player;
@@ -496,5 +554,13 @@ public class CharacterCreationScreen
     private static string FormatMod(int mod)
     {
         return mod >= 0 ? $"+{mod}" : mod.ToString();
+    }
+
+    private static string CenterPad(string s, int width)
+    {
+        int totalPad = width - s.Length;
+        int leftPad = totalPad / 2;
+        int rightPad = totalPad - leftPad;
+        return new string(' ', leftPad) + s + new string(' ', rightPad);
     }
 }
