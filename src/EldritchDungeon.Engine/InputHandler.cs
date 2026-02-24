@@ -54,8 +54,7 @@ public class InputHandler
             case 'g':
                 return TryPickup(player, map);
             case 'p':
-                _engine.ReligionSystem.Pray(player, new Random().Next(101));
-                return true;
+                return true; // Wait (prayer removed; gods react automatically)
             case 'S':
                 SaveManager.Save(_engine);
                 _engine.Log.Add("Game saved.");

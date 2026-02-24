@@ -20,6 +20,12 @@ public class ReligionComponent : IComponent
         }
     }
 
+    /// <summary>
+    /// Countdown (in turns) before a god summon wave can fire again.
+    /// Prevents constant monster spam at high anger.
+    /// </summary>
+    public int SummonCooldown { get; set; }
+
     public void Initialize() { }
 
     public void SetGod(GodType god)

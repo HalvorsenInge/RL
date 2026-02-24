@@ -12,7 +12,12 @@ public static class MiscItemDatabase
         ["18 Bullets"] = new Item { Name = "18 Bullets", Type = ItemType.Ammo, Glyph = '*', Value = 9 },
         ["Lockpick Set"] = new Item { Name = "Lockpick Set", Type = ItemType.Tool, Glyph = 'k', Value = 20 },
         ["Spellbook (Fireball)"] = new Item { Name = "Spellbook (Fireball)", Type = ItemType.Scroll, Glyph = '+', Value = 50 },
-        ["Chalk (Summoning)"] = new Item { Name = "Chalk (Summoning)", Type = ItemType.Tool, Glyph = '~', Value = 10 },
+        ["Chalk (Summoning)"] = new ToolItem
+        {
+            Name = "Chalk (Summoning)", Glyph = '~', Value = 10,
+            Effect = ToolEffect.Summoning,
+            EffectDescription = "Draws a summoning circle. Calls something from beyond the veil."
+        },
         ["Notebook"] = new Item { Name = "Notebook", Type = ItemType.Tool, Glyph = 'n', Value = 5 },
         ["Magnifying Glass"] = new Item { Name = "Magnifying Glass", Type = ItemType.Tool, Glyph = 'o', Value = 15 },
     };

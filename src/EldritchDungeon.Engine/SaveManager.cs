@@ -48,6 +48,10 @@ public class SavedItem
     public int MagicDamage { get; set; }
     public string EnchantmentName { get; set; } = string.Empty;
 
+    // ToolItem fields
+    public ToolEffect ToolEffect { get; set; }
+    public string EffectDescription { get; set; } = string.Empty;
+
     // Common
     public double Weight { get; set; }
     public int Value { get; set; }
@@ -76,6 +80,14 @@ public class SavedMonster
     public int MaxHp { get; set; }
     public int X { get; set; }
     public int Y { get; set; }
+    public int GoldMin { get; set; }
+    public int GoldMax { get; set; }
+    public double GoldDropChance { get; set; }
+    public bool IsEldritchCoin { get; set; }
+    // Summoning
+    public bool IsSummoned { get; set; }
+    public SummonedDisposition Disposition { get; set; }
+    public int SummonDurationLeft { get; set; } = -1;
 }
 
 public class SavedRoom
@@ -333,7 +345,14 @@ public static class SaveManager
                 CurrentHp = monster.Health.CurrentHp,
                 MaxHp = monster.Health.MaxHp,
                 X = monster.X,
-                Y = monster.Y
+                Y = monster.Y,
+                GoldMin = monster.GoldMin,
+                GoldMax = monster.GoldMax,
+                GoldDropChance = monster.GoldDropChance,
+                IsEldritchCoin = monster.IsEldritchCoin,
+                IsSummoned = monster.IsSummoned,
+                Disposition = monster.Disposition,
+                SummonDurationLeft = monster.SummonDurationLeft
             });
         }
 
@@ -401,6 +420,11 @@ public static class SaveManager
                 saved.SanityAmount = c.SanityAmount;
                 saved.AddictionRisk = c.AddictionRisk;
                 break;
+            case ToolItem t:
+                saved.ItemKind = "Tool";
+                saved.ToolEffect = t.Effect;
+                saved.EffectDescription = t.EffectDescription;
+                break;
         }
 
         return saved;
@@ -446,6 +470,14 @@ public static class SaveManager
                 ManaAmount = saved.ManaAmount,
                 SanityAmount = saved.SanityAmount,
                 AddictionRisk = saved.AddictionRisk,
+                Weight = saved.Weight,
+                Value = saved.Value
+            },
+            "Tool" => new ToolItem
+            {
+                Name = saved.Name,
+                Effect = saved.ToolEffect,
+                EffectDescription = saved.EffectDescription,
                 Weight = saved.Weight,
                 Value = saved.Value
             },

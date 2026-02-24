@@ -11,7 +11,8 @@ public enum ScreenResult
     OpenHelp,
     OpenLook,
     OpenSpell,
-    OpenShop
+    OpenShop,
+    UseTool
 }
 
 public abstract class Screen

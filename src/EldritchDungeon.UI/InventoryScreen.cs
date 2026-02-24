@@ -12,6 +12,9 @@ public class InventoryScreen : Screen
     private int _scrollOffset;
     private const int MaxVisibleItems = 18;
 
+    /// <summary>Set when a ToolItem is used; consumed by GameLoop to trigger the effect.</summary>
+    public ToolItem? PendingToolItem { get; private set; }
+
     public InventoryScreen(ASCIIRenderer renderer)
     {
         _renderer = renderer;
@@ -69,6 +72,7 @@ public class InventoryScreen : Screen
                     Weapon w => $"Dmg:{w.Damage}" + (w.MagicDamage > 0 ? $"+{w.MagicDamage}m" : "") + $" Spd:{w.Speed} Rng:{w.Range}",
                     Armor a => $"AC:{a.ArmorClass}",
                     Consumable c => FormatConsumable(c),
+                    ToolItem t => $"[TOOL] {t.Effect}",
                     _ => $"Val:{item.Value}"
                 };
                 _renderer.WriteString(50, row, detail, ConsoleColor.DarkYellow);
@@ -106,6 +110,11 @@ public class InventoryScreen : Screen
             else if (sel is Consumable c2)
             {
                 _renderer.WriteString(1, row, FormatConsumableDetail(c2), ConsoleColor.Gray);
+            }
+            else if (sel is ToolItem t2)
+            {
+                string desc = string.IsNullOrEmpty(t2.EffectDescription) ? $"Effect: {t2.Effect}" : t2.EffectDescription;
+                _renderer.WriteString(1, row, desc, ConsoleColor.Magenta);
             }
         }
 
@@ -174,7 +183,11 @@ public class InventoryScreen : Screen
 
             case 'u': // Use
                 if (_selectedIndex < items.Count)
-                    TryUse(items[_selectedIndex]);
+                {
+                    var useResult = TryUse(items[_selectedIndex]);
+                    if (useResult != ScreenResult.None)
+                        return useResult;
+                }
                 break;
         }
 
@@ -209,28 +222,42 @@ public class InventoryScreen : Screen
             _selectedIndex--;
     }
 
-    private void TryUse(Item item)
+    private ScreenResult TryUse(Item item)
     {
-        if (_player == null || item is not Consumable c) return;
+        if (_player == null) return ScreenResult.None;
 
-        if (c.HealAmount > 0)
-            _player.Health.Heal(c.HealAmount);
-        if (c.ManaAmount > 0)
-            _player.Mana.Restore(c.ManaAmount);
-        if (c.SanityAmount > 0)
-            _player.Sanity.RestoreSanity(c.SanityAmount);
-
-        // Addiction risk
-        if (c.AddictionRisk > 0)
+        if (item is Consumable c)
         {
-            _player.AddictionLevel += c.AddictionRisk;
-            if (_player.AddictionLevel > 100)
-                _player.AddictionLevel = 100;
+            if (c.HealAmount > 0)
+                _player.Health.Heal(c.HealAmount);
+            if (c.ManaAmount > 0)
+                _player.Mana.Restore(c.ManaAmount);
+            if (c.SanityAmount > 0)
+                _player.Sanity.RestoreSanity(c.SanityAmount);
+
+            if (c.AddictionRisk > 0)
+            {
+                _player.AddictionLevel += c.AddictionRisk;
+                if (_player.AddictionLevel > 100)
+                    _player.AddictionLevel = 100;
+            }
+
+            _player.Inventory.RemoveItem(item);
+            if (_selectedIndex >= _player.Inventory.Items.Count && _selectedIndex > 0)
+                _selectedIndex--;
+            return ScreenResult.None;
         }
 
-        _player.Inventory.RemoveItem(item);
-        if (_selectedIndex >= _player.Inventory.Items.Count && _selectedIndex > 0)
-            _selectedIndex--;
+        if (item is ToolItem tool && tool.Effect != ToolEffect.None)
+        {
+            _player.Inventory.RemoveItem(item);
+            if (_selectedIndex >= _player.Inventory.Items.Count && _selectedIndex > 0)
+                _selectedIndex--;
+            PendingToolItem = tool;
+            return ScreenResult.UseTool;
+        }
+
+        return ScreenResult.None;
     }
 
     private static string FormatConsumable(Consumable c)

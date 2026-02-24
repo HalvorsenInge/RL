@@ -26,7 +26,7 @@ public class TurnManager
 
         // 2. Divine blessings (HP/mana regen, sanity resist) and wrath punishments
         _engine.ReligionSystem.ApplyBlessings(player);
-        _engine.ReligionSystem.ApplyWrath(player);
+        _engine.ReligionSystem.ApplyWrath(player, map);
 
         // 3. Check sanity from visible monsters
         _engine.SanitySystem.Update(map);
@@ -61,6 +61,7 @@ public class TurnManager
         }
 
         // Fire damage to monsters standing on fire tiles
+        var rng = new Random();
         foreach (var monster in map.Monsters.ToList())
         {
             if (map.GetTileEffect(monster.X, monster.Y) == TileEffect.Fire)
@@ -71,6 +72,7 @@ public class TurnManager
                     _engine.Log.Add($"The {monster.Name} burns to death!");
                     map.Monsters.Remove(monster);
                     player.Stats.Experience += monster.XpValue;
+                    AwardGoldFromFire(monster, player, rng);
                     _engine.LevelingSystem.CheckLevelUp(player);
                 }
             }
@@ -78,5 +80,46 @@ public class TurnManager
 
         // Tick down durations; expired effects are handled automatically in DungeonMap
         map.TickTileEffects();
+
+        // Expire timed summons
+        TickSummons(map);
+    }
+
+    private void TickSummons(DungeonMap map)
+    {
+        foreach (var monster in map.Monsters.ToList())
+        {
+            if (!monster.IsSummoned || monster.SummonDurationLeft < 0) continue;
+
+            monster.SummonDurationLeft--;
+            if (monster.SummonDurationLeft <= 0)
+            {
+                _engine.Log.Add($"The {monster.Name} fades back into the void.");
+                map.Monsters.Remove(monster);
+            }
+        }
+    }
+
+    private void AwardGoldFromFire(Monster monster, Player player, Random rng)
+    {
+        if (monster.GoldDropChance <= 0) return;
+        if (rng.NextDouble() > monster.GoldDropChance) return;
+
+        int gold = monster.GoldMin >= monster.GoldMax
+            ? monster.GoldMin
+            : rng.Next(monster.GoldMin, monster.GoldMax + 1);
+        if (gold <= 0) return;
+
+        player.Gold += gold;
+
+        if (monster.IsEldritchCoin)
+        {
+            player.Sanity.LoseSanity(1);
+            _engine.Log.Add($"  You claim {gold} eldritch coins from the ashes. (-1 sanity)");
+        }
+        else
+        {
+            _engine.Log.Add($"  You find {gold} gold among the ashes.");
+        }
     }
 }

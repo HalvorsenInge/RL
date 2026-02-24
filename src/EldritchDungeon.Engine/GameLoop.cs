@@ -71,6 +71,15 @@ public class GameLoop
                     continue;
                 }
 
+                // Special case: InventoryScreen — tool used
+                if (_overlayScreen is InventoryScreen inv && result == ScreenResult.UseTool)
+                {
+                    _overlayScreen = null;
+                    if (inv.PendingToolItem != null)
+                        HandleToolUse(inv.PendingToolItem);
+                    continue;
+                }
+
                 HandleScreenResult(result);
             }
             else if (_isSpellTargeting)
@@ -276,6 +285,25 @@ public class GameLoop
         {
             _targetX = Math.Clamp(_targetX + dx, 0, map.Width  - 1);
             _targetY = Math.Clamp(_targetY + dy, 0, map.Height - 1);
+        }
+    }
+
+    // ── Tool use ────────────────────────────────────────────────────────────
+
+    private void HandleToolUse(ToolItem tool)
+    {
+        var player = _engine.Player!;
+        var map    = _engine.Map!;
+
+        switch (tool.Effect)
+        {
+            case ToolEffect.Summoning:
+                _engine.SummoningSystem.Summon(player, map);
+                _turnManager.ProcessTurn();
+                break;
+            default:
+                _engine.Log.Add($"You use the {tool.Name}. Nothing happens.");
+                break;
         }
     }
 

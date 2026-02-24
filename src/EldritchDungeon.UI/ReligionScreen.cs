@@ -8,8 +8,7 @@ public class ReligionScreen : Screen
 {
     private readonly ASCIIRenderer _renderer;
     private Player? _player;
-    private int _selectedGodIndex;
-    private bool _viewingPantheon; // true = browsing gods, false = viewing current god
+    private bool _viewingPantheon;
 
     public ReligionScreen(ASCIIRenderer renderer)
     {
@@ -30,7 +29,7 @@ public class ReligionScreen : Screen
         if (_player.Religion.CurrentGod.HasValue)
             RenderCurrentGod();
         else
-            RenderGodSelection();
+            RenderNoDiety();
 
         _renderer.Flush();
     }
@@ -85,48 +84,26 @@ public class ReligionScreen : Screen
         }
 
         _renderer.WriteString(1, GameConstants.ScreenHeight - 1,
-            "[Tab] View All Gods  [p] Pray  [Esc] Back", ConsoleColor.DarkGray);
+            "[Tab] View All Gods  [Esc] Back", ConsoleColor.DarkGray);
     }
 
-    private void RenderGodSelection()
+    private void RenderNoDiety()
     {
         int row = 0;
-        _renderer.WriteString(1, row, "=== Choose Your God ===", ConsoleColor.Yellow);
+        _renderer.WriteString(1, row, "=== The Pantheon ===", ConsoleColor.Yellow);
         row++;
-        _renderer.WriteString(1, row, "You serve no deity. Select a god to worship.", ConsoleColor.Gray);
+        _renderer.WriteString(1, row, "No deity has claimed you yet. Their eyes are upon you.", ConsoleColor.Gray);
         row += 2;
 
-        var gods = GodDatabase.GetAll();
-        int i = 0;
-        foreach (var (type, god) in gods)
+        foreach (var (type, god) in GodDatabase.GetAll())
         {
-            bool selected = i == _selectedGodIndex;
-            var color = selected ? ConsoleColor.White : ConsoleColor.Gray;
-            string prefix = selected ? "> " : "  ";
-
-            _renderer.WriteString(1, row, $"{prefix}{god.Name} - {god.Domain}", color);
+            _renderer.WriteString(1, row, $"{god.Name,-15} {god.Domain}", ConsoleColor.Gray);
             row++;
-
-            if (selected)
-            {
-                _renderer.WriteString(5, row, $"Bonus: {god.FavorBonus}", ConsoleColor.Green);
-                row++;
-                _renderer.WriteString(5, row, $"Anger: {god.AngerTrigger}", ConsoleColor.Red);
-                row++;
-                _renderer.WriteString(5, row, "Powers:", ConsoleColor.DarkCyan);
-                row++;
-                foreach (var power in god.Powers)
-                {
-                    _renderer.WriteString(7, row, $"T{power.Tier}: {power.Name} - {power.Description}", ConsoleColor.DarkGray);
-                    row++;
-                }
-            }
-            row++;
-            i++;
+            if (row >= GameConstants.ScreenHeight - 2) break;
         }
 
         _renderer.WriteString(1, GameConstants.ScreenHeight - 1,
-            "[Up/Down] Select  [Enter] Worship  [Esc] Back", ConsoleColor.DarkGray);
+            "[Esc] Back", ConsoleColor.DarkGray);
     }
 
     private void RenderPantheonOverlay(int startRow)
@@ -159,29 +136,8 @@ public class ReligionScreen : Screen
             return ScreenResult.Close;
         }
 
-        if (_player.Religion.CurrentGod.HasValue)
-        {
-            // Viewing current god
-            if (keyInfo.Key == ConsoleKey.Tab)
-                _viewingPantheon = !_viewingPantheon;
-            return ScreenResult.None;
-        }
-
-        // God selection mode
-        int godCount = GodDatabase.GetAll().Count;
-        switch (keyInfo.Key)
-        {
-            case ConsoleKey.UpArrow:
-                if (_selectedGodIndex > 0) _selectedGodIndex--;
-                break;
-            case ConsoleKey.DownArrow:
-                if (_selectedGodIndex < godCount - 1) _selectedGodIndex++;
-                break;
-            case ConsoleKey.Enter:
-                var godType = GodDatabase.GetAll().Keys.ElementAt(_selectedGodIndex);
-                _player.Religion.SetGod(godType);
-                break;
-        }
+        if (keyInfo.Key == ConsoleKey.Tab)
+            _viewingPantheon = !_viewingPantheon;
 
         return ScreenResult.None;
     }

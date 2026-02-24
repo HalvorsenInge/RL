@@ -55,6 +55,20 @@ public class HelpScreen : Screen
         _renderer.WriteString(40, row, "  g         Pick Up / Get", ConsoleColor.White);
         row += 2;
 
+        // Inventory actions
+        _renderer.WriteString(1, row, "-- Inventory (i) --", ConsoleColor.DarkCyan);
+        row++;
+        _renderer.WriteString(1, row, "  u         Use item (consumable or tool)", ConsoleColor.White);
+        row++;
+        _renderer.WriteString(1, row, "  e         Equip item", ConsoleColor.White);
+        row++;
+        _renderer.WriteString(1, row, "  d         Drop item", ConsoleColor.White);
+        row++;
+        _renderer.WriteString(1, row, "  [TOOL] Chalk (Summoning) -> draws a circle, calls something.", ConsoleColor.Magenta);
+        row++;
+        _renderer.WriteString(1, row, "           Could be hostile. Could be friendly. Could be a fork.", ConsoleColor.DarkMagenta);
+        row += 2;
+
         // Screens
         _renderer.WriteString(1, row, "-- Screens --", ConsoleColor.DarkCyan);
         row++;

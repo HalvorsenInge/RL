@@ -23,27 +23,6 @@ public class ReligionSystemTests
         return player;
     }
 
-    [Fact]
-    public void Pray_WithGod_IncreasesFavorBy2()
-    {
-        var player = CreateTestPlayer(GodType.Cthulhu);
-
-        _religion.Pray(player, 55);
-
-        Assert.Equal(2, player.Religion.Favor);
-        Assert.Contains(_messages, m => m.Contains("Cthulhu"));
-    }
-
-    [Fact]
-    public void Pray_WithoutGod_NoEffect()
-    {
-        var player = CreateTestPlayer();
-
-        _religion.Pray(player, 0);
-
-        Assert.Equal(0, player.Religion.Favor);
-        Assert.Contains(_messages, m => m.Contains("no god"));
-    }
 
     [Fact]
     public void OnKill_WithGod_IncreasesFavorBy3()
@@ -67,15 +46,4 @@ public class ReligionSystemTests
         Assert.Equal(0, player.Religion.Favor);
     }
 
-    [Fact]
-    public void Pray_MultipleTimes_AccumulatesFavor()
-    {
-        var player = CreateTestPlayer(GodType.Hastur);
-
-        _religion.Pray(player, 55);
-        _religion.Pray(player, 55);
-        _religion.Pray(player, 55);
-
-        Assert.Equal(6, player.Religion.Favor);
-    }
 }

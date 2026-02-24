@@ -51,7 +51,11 @@ public class MonsterPlacer
             Tier = definition.Tier,
             Damage = definition.Damage,
             XpValue = definition.XpValue,
-            SanityDamage = definition.SanityDamage
+            SanityDamage = definition.SanityDamage,
+            GoldMin = definition.GoldMin,
+            GoldMax = definition.GoldMax,
+            GoldDropChance = definition.GoldDropChance,
+            IsEldritchCoin = definition.IsEldritchCoin
         };
 
         monster.Health.MaxHp = definition.HP;

@@ -8,6 +8,7 @@ namespace EldritchDungeon.Systems;
 public class CombatSystem
 {
     private readonly Action<string> _log;
+    private readonly Random _random = new();
 
     public CombatSystem(Action<string> log)
     {
@@ -82,6 +83,7 @@ public class CombatSystem
             _log($"The {monster.Name} is slain! (+{monster.XpValue} XP)");
             map.Monsters.Remove(monster);
             player.Stats.Experience += monster.XpValue;
+            AwardGold(monster, player);
         }
     }
 
@@ -169,6 +171,7 @@ public class CombatSystem
             _log($"The {monster.Name} is slain! (+{monster.XpValue} XP)");
             map.Monsters.Remove(monster);
             player.Stats.Experience += monster.XpValue;
+            AwardGold(monster, player);
         }
 
         return true;
@@ -206,6 +209,29 @@ public class CombatSystem
         {
             player.Sanity.LoseSanity(monster.SanityDamage);
             _log($"The {monster.Name}'s attack shakes your sanity! (-{monster.SanityDamage})");
+        }
+    }
+
+    private void AwardGold(Monster monster, Player player)
+    {
+        if (monster.GoldDropChance <= 0) return;
+        if (_random.NextDouble() > monster.GoldDropChance) return;
+
+        int gold = monster.GoldMin >= monster.GoldMax
+            ? monster.GoldMin
+            : _random.Next(monster.GoldMin, monster.GoldMax + 1);
+        if (gold <= 0) return;
+
+        player.Gold += gold;
+
+        if (monster.IsEldritchCoin)
+        {
+            player.Sanity.LoseSanity(1);
+            _log($"  You claim {gold} eldritch coins. (-1 sanity)");
+        }
+        else
+        {
+            _log($"  You find {gold} gold.");
         }
     }
 }

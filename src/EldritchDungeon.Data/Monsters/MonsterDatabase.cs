@@ -9,42 +9,49 @@ public static class MonsterDatabase
         {
             Name = "Rat", Glyph = 'r', Tier = 1,
             HP = 5, Damage = 2, SanityDamage = 0, XpValue = 10,
+            GoldDropChance = 0.05, GoldMin = 1, GoldMax = 3,
             Abilities = new List<string> { "Swarm (5+)" }
         },
         ["Giant Bat"] = new MonsterDefinition
         {
             Name = "Giant Bat", Glyph = 'B', Tier = 1,
             HP = 8, Damage = 3, SanityDamage = 0, XpValue = 15,
+            GoldDropChance = 0.05, GoldMin = 1, GoldMax = 2,
             Abilities = new List<string> { "Flying" }
         },
         ["Goblin"] = new MonsterDefinition
         {
             Name = "Goblin", Glyph = 'g', Tier = 1,
             HP = 15, Damage = 5, SanityDamage = 0, XpValue = 25,
+            GoldDropChance = 0.80, GoldMin = 5, GoldMax = 15,
             Abilities = new List<string> { "Numbers" }
         },
         ["Kobold"] = new MonsterDefinition
         {
             Name = "Kobold", Glyph = 'k', Tier = 1,
             HP = 12, Damage = 4, SanityDamage = 0, XpValue = 20,
+            GoldDropChance = 0.75, GoldMin = 3, GoldMax = 10,
             Abilities = new List<string> { "Traps" }
         },
         ["Skeleton"] = new MonsterDefinition
         {
             Name = "Skeleton", Glyph = 's', Tier = 2,
             HP = 20, Damage = 8, SanityDamage = 2, XpValue = 35,
+            GoldDropChance = 0.15, GoldMin = 2, GoldMax = 6,
             Abilities = new List<string> { "Undead" }
         },
         ["Zombie"] = new MonsterDefinition
         {
             Name = "Zombie", Glyph = 'z', Tier = 2,
             HP = 25, Damage = 6, SanityDamage = 1, XpValue = 30,
+            GoldDropChance = 0.10, GoldMin = 1, GoldMax = 4,
             Abilities = new List<string> { "Slow", "Rot" }
         },
         ["Giant Spider"] = new MonsterDefinition
         {
             Name = "Giant Spider", Glyph = 'S', Tier = 2,
             HP = 18, Damage = 5, SanityDamage = 3, XpValue = 40,
+            GoldDropChance = 0.05, GoldMin = 1, GoldMax = 3,
             Abilities = new List<string> { "Poison" }
         },
         ["Cave Spider"] = new MonsterDefinition
@@ -59,30 +66,35 @@ public static class MonsterDatabase
         {
             Name = "Orc", Glyph = 'o', Tier = 3,
             HP = 35, Damage = 12, SanityDamage = 0, XpValue = 75,
+            GoldDropChance = 0.80, GoldMin = 10, GoldMax = 30,
             Abilities = new List<string> { "Berserk" }
         },
         ["Dark Elf"] = new MonsterDefinition
         {
             Name = "Dark Elf", Glyph = 'e', Tier = 3,
             HP = 30, Damage = 14, SanityDamage = 2, XpValue = 80,
+            GoldDropChance = 0.85, GoldMin = 15, GoldMax = 40,
             Abilities = new List<string> { "Magic (-10 HP)" }
         },
         ["Ghoul"] = new MonsterDefinition
         {
             Name = "Ghoul", Glyph = 'G', Tier = 3,
             HP = 40, Damage = 10, SanityDamage = 5, XpValue = 90,
+            GoldDropChance = 0.15, GoldMin = 5, GoldMax = 15,
             Abilities = new List<string> { "Paralysis" }
         },
         ["Ogre"] = new MonsterDefinition
         {
             Name = "Ogre", Glyph = 'O', Tier = 4,
             HP = 60, Damage = 18, SanityDamage = 3, XpValue = 100,
+            GoldDropChance = 0.70, GoldMin = 20, GoldMax = 50,
             Abilities = new List<string> { "Throw rocks" }
         },
         ["Dark Cultist"] = new MonsterDefinition
         {
             Name = "Dark Cultist", Glyph = 'c', Tier = 4,
             HP = 35, Damage = 10, SanityDamage = 8, XpValue = 100,
+            GoldDropChance = 0.90, GoldMin = 15, GoldMax = 45,
             Abilities = new List<string> { "Summon" }
         },
         ["Worm"] = new MonsterDefinition
@@ -95,6 +107,7 @@ public static class MonsterDatabase
         {
             Name = "Fire Vampire", Glyph = 'V', Tier = 4,
             HP = 25, Damage = 15, SanityDamage = 5, XpValue = 95,
+            GoldDropChance = 0.40, GoldMin = 10, GoldMax = 25,
             Abilities = new List<string> { "Life drain" }
         },
         ["Shadow"] = new MonsterDefinition
@@ -109,24 +122,28 @@ public static class MonsterDatabase
         {
             Name = "Deep One", Glyph = 'D', Tier = 5,
             HP = 50, Damage = 18, SanityDamage = 15, XpValue = 200,
+            GoldDropChance = 0.40, GoldMin = 10, GoldMax = 30, IsEldritchCoin = true,
             Abilities = new List<string> { "Amphibious", "Devolve" }
         },
         ["Mi-Go"] = new MonsterDefinition
         {
             Name = "Mi-Go", Glyph = 'M', Tier = 5,
             HP = 55, Damage = 20, SanityDamage = 20, XpValue = 220,
+            GoldDropChance = 0.25, GoldMin = 20, GoldMax = 40, IsEldritchCoin = true,
             Abilities = new List<string> { "Flying", "Brain harvest" }
         },
         ["Ghast"] = new MonsterDefinition
         {
             Name = "Ghast", Glyph = 'g', Tier = 5,
             HP = 45, Damage = 22, SanityDamage = 12, XpValue = 200,
+            GoldDropChance = 0.15, GoldMin = 5, GoldMax = 15,
             Abilities = new List<string> { "Stench", "Rot" }
         },
         ["Wight"] = new MonsterDefinition
         {
             Name = "Wight", Glyph = 'W', Tier = 6,
             HP = 60, Damage = 15, SanityDamage = 15, XpValue = 210,
+            GoldDropChance = 0.15, GoldMin = 10, GoldMax = 20,
             Abilities = new List<string> { "Level drain" }
         },
         ["Phantom"] = new MonsterDefinition
@@ -139,6 +156,7 @@ public static class MonsterDatabase
         {
             Name = "Byakhee", Glyph = 'b', Tier = 5,
             HP = 50, Damage = 18, SanityDamage = 10, XpValue = 200,
+            GoldDropChance = 0.25, GoldMin = 15, GoldMax = 30, IsEldritchCoin = true,
             Abilities = new List<string> { "Flying", "Poison" }
         },
         ["Hunting Horror"] = new MonsterDefinition
@@ -151,6 +169,7 @@ public static class MonsterDatabase
         {
             Name = "Star-Spawn (Lesser)", Glyph = '*', Tier = 6,
             HP = 70, Damage = 25, SanityDamage = 20, XpValue = 250,
+            GoldDropChance = 0.25, GoldMin = 30, GoldMax = 60, IsEldritchCoin = true,
             Abilities = new List<string> { "Mythos magic" }
         },
 
@@ -159,6 +178,7 @@ public static class MonsterDatabase
         {
             Name = "Elder Thing", Glyph = 'E', Tier = 7,
             HP = 80, Damage = 30, SanityDamage = 25, XpValue = 400,
+            GoldDropChance = 0.25, GoldMin = 40, GoldMax = 80, IsEldritchCoin = true,
             Abilities = new List<string> { "Sonic attack" }
         },
         ["Shoggeth"] = new MonsterDefinition
@@ -171,6 +191,7 @@ public static class MonsterDatabase
         {
             Name = "High Cultist", Glyph = 'C', Tier = 7,
             HP = 70, Damage = 25, SanityDamage = 30, XpValue = 380,
+            GoldDropChance = 0.90, GoldMin = 50, GoldMax = 120,
             Abilities = new List<string> { "Summon", "Sanity blast" }
         },
         ["Chthonian"] = new MonsterDefinition
@@ -189,18 +210,21 @@ public static class MonsterDatabase
         {
             Name = "Vampire Lord", Glyph = 'V', Tier = 8,
             HP = 120, Damage = 30, SanityDamage = 25, XpValue = 450,
+            GoldDropChance = 0.90, GoldMin = 80, GoldMax = 150,
             Abilities = new List<string> { "Domination" }
         },
         ["Flying Polyp"] = new MonsterDefinition
         {
             Name = "Flying Polyp", Glyph = 'P', Tier = 8,
             HP = 80, Damage = 25, SanityDamage = 40, XpValue = 480,
+            GoldDropChance = 0.25, GoldMin = 30, GoldMax = 60, IsEldritchCoin = true,
             Abilities = new List<string> { "Telekinesis" }
         },
         ["Serpent of N'kai"] = new MonsterDefinition
         {
             Name = "Serpent of N'kai", Glyph = 'N', Tier = 8,
             HP = 95, Damage = 32, SanityDamage = 35, XpValue = 500,
+            GoldDropChance = 0.25, GoldMin = 50, GoldMax = 100, IsEldritchCoin = true,
             Abilities = new List<string> { "Hypnosis" }
         },
 
@@ -209,30 +233,35 @@ public static class MonsterDatabase
         {
             Name = "High Priest", Glyph = 'P', Tier = 9,
             HP = 150, Damage = 45, SanityDamage = 50, XpValue = 1000,
+            GoldDropChance = 1.0, GoldMin = 200, GoldMax = 400,
             Abilities = new List<string> { "Summon", "Miracles" }
         },
         ["Star-Spawn (Greater)"] = new MonsterDefinition
         {
             Name = "Star-Spawn (Greater)", Glyph = '*', Tier = 9,
             HP = 180, Damage = 55, SanityDamage = 60, XpValue = 1200,
+            GoldDropChance = 1.0, GoldMin = 100, GoldMax = 200, IsEldritchCoin = true,
             Abilities = new List<string> { "Reality warp" }
         },
         ["Dagon's Avatar"] = new MonsterDefinition
         {
             Name = "Dagon's Avatar", Glyph = 'D', Tier = 9,
             HP = 200, Damage = 50, SanityDamage = 55, XpValue = 1300,
+            GoldDropChance = 1.0, GoldMin = 300, GoldMax = 300, IsEldritchCoin = true,
             Abilities = new List<string> { "Water control" }
         },
         ["Hastur's Avatar"] = new MonsterDefinition
         {
             Name = "Hastur's Avatar", Glyph = 'H', Tier = 9,
             HP = 220, Damage = 60, SanityDamage = 70, XpValue = 1400,
+            GoldDropChance = 1.0, GoldMin = 300, GoldMax = 300, IsEldritchCoin = true,
             Abilities = new List<string> { "Yellow Sign" }
         },
         ["Nyarlathotep's Avatar"] = new MonsterDefinition
         {
             Name = "Nyarlathotep's Avatar", Glyph = 'N', Tier = 10,
             HP = 250, Damage = 65, SanityDamage = 75, XpValue = 1500,
+            GoldDropChance = 1.0, GoldMin = 400, GoldMax = 400, IsEldritchCoin = true,
             Abilities = new List<string> { "Chaos magic" }
         },
         ["Shuggoth (Elder)"] = new MonsterDefinition
@@ -245,6 +274,7 @@ public static class MonsterDatabase
         {
             Name = "Great Old One", Glyph = 'G', Tier = 10,
             HP = 500, Damage = 100, SanityDamage = 100, XpValue = 5000,
+            GoldDropChance = 1.0, GoldMin = 1000, GoldMax = 1000, IsEldritchCoin = true,
             Abilities = new List<string> { "Reality destruction" }
         },
         ["Cthulhu"] = new MonsterDefinition

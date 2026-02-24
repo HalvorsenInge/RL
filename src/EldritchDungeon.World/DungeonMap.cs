@@ -239,6 +239,85 @@ public class DungeonMap : Map
         return result;
     }
 
+    // ── Sanity Mutations ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Swaps a handful of wall↔floor tiles at random.
+    /// Called when the player has been at Broken sanity for several turns.
+    /// </summary>
+    public string MutateWalls(Random rng)
+    {
+        int wallsToFloor = rng.Next(1, 7);
+        int floorToWalls = rng.Next(1, 7);
+        int changed = 0;
+
+        var walls  = new List<(int x, int y)>();
+        var floors = new List<(int x, int y)>();
+
+        for (int x = 1; x < Width - 1; x++)
+        for (int y = 1; y < Height - 1; y++)
+        {
+            var t = GetTile(x, y);
+            if (t.Type == TileType.Wall)  walls.Add((x, y));
+            else if (t.Type == TileType.Floor) floors.Add((x, y));
+        }
+
+        for (int i = 0; i < wallsToFloor && i < walls.Count; i++)
+        {
+            int idx = rng.Next(walls.Count - i) + i;
+            (walls[i], walls[idx]) = (walls[idx], walls[i]);
+            SetTile(walls[i].x, walls[i].y, TileType.Floor);
+            changed++;
+        }
+
+        for (int i = 0; i < floorToWalls && i < floors.Count; i++)
+        {
+            int idx = rng.Next(floors.Count - i) + i;
+            (floors[i], floors[idx]) = (floors[idx], floors[i]);
+            var (fx, fy) = floors[i];
+            if (Player != null && Player.X == fx && Player.Y == fy) continue;
+            if (GetMonsterAt(fx, fy) != null) continue;
+            if (GetTile(fx, fy).Type == TileType.StairsDown
+                || GetTile(fx, fy).Type == TileType.StairsUp) continue;
+            SetTile(fx, fy, TileType.Wall);
+            changed++;
+        }
+
+        return changed > 0
+            ? $"[MADNESS] The walls shift — {changed} tiles remade by your unravelling mind."
+            : "[MADNESS] The walls pulse... but hold.";
+    }
+
+    /// <summary>
+    /// Carves a new short passage between two random rooms.
+    /// </summary>
+    public string MutatePassages(Random rng)
+    {
+        if (Rooms.Count < 2) return "[MADNESS] Reality flickers.";
+
+        int i = rng.Next(Rooms.Count);
+        int j = rng.Next(Rooms.Count);
+        while (j == i) j = rng.Next(Rooms.Count);
+
+        var r1 = Rooms[i];
+        var r2 = Rooms[j];
+
+        int x1 = Math.Clamp(r1.X + r1.Width / 2, 1, Width - 2);
+        int y1 = Math.Clamp(r1.Y + r1.Height / 2, 1, Height - 2);
+        int x2 = Math.Clamp(r2.X + r2.Width / 2, 1, Width - 2);
+        int y2 = Math.Clamp(r2.Y + r2.Height / 2, 1, Height - 2);
+
+        int minX = Math.Min(x1, x2), maxX = Math.Max(x1, x2);
+        int minY = Math.Min(y1, y2), maxY = Math.Max(y1, y2);
+
+        for (int cx = minX; cx <= maxX; cx++)
+            if (GetTile(cx, y1).Type == TileType.Wall) SetTile(cx, y1, TileType.Floor);
+        for (int cy = minY; cy <= maxY; cy++)
+            if (GetTile(x2, cy).Type == TileType.Wall) SetTile(x2, cy, TileType.Floor);
+
+        return "[MADNESS] A passage opens where no passage was. The dungeon is changing.";
+    }
+
     // ── FOV ─────────────────────────────────────────────────────────────────
 
     public void UpdateFov(int x, int y, int radius)

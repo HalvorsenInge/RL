@@ -34,8 +34,35 @@ public enum SpellId
     ChainLightning,
     IceStorm,
     Meteor,
+    // Standard spells (new)
+    Blink,
+    PhaseStep,
+    MirrorImage,
+    RaiseDead,
+    BoneSpear,
+    Petrify,
+    GravityWell,
+    BloodBoil,
+    Wither,
+    EldritchDrain,
+    SwarmOfRats,
+    StaticField,
+    Silence,
+    ShadowStep,
+    Entangle,
+    SummonHorror,
+    DeathWord,
+    Polymorph,
+    TimeEcho,
+
     // Super spells
-    EyeInTheSky
+    EyeInTheSky,
+    ArmageddonRain,
+    MassPetrification,
+    RealityFracture,
+    TheDreamingWord,
+    SummonHorde,
+    VoidCollapse
 }
 
 public enum SpellTarget
@@ -157,4 +184,17 @@ public enum MonsterAIState
 {
     Idle,
     Aggressive
+}
+
+public enum SummonedDisposition
+{
+    Hostile,
+    Neutral,
+    Friendly
+}
+
+public enum ToolEffect
+{
+    None,
+    Summoning
 }

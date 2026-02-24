@@ -29,15 +29,41 @@ public class MapGenerator
 
     public DungeonMap Generate(int dungeonLevel = 1)
     {
-        var map = new DungeonMap();
-        map.InitializeTiles(_width, _height);
-
-        for (int i = 0; i < _maxRooms; i++)
+        // Pick map dimensions based on dungeon depth
+        int width, height, maxRooms;
+        if (dungeonLevel <= 5)
         {
-            int roomWidth = _random.Next(_minRoomSize, _maxRoomSize + 1);
+            width = GameConstants.MapGenSmallWidth;
+            height = GameConstants.MapGenSmallHeight;
+            maxRooms = GameConstants.MaxRooms;
+        }
+        else if (dungeonLevel <= 15)
+        {
+            width = GameConstants.MapGenMedWidth;
+            height = GameConstants.MapGenMedHeight;
+            maxRooms = GameConstants.MaxRoomsLarge;
+        }
+        else
+        {
+            width = GameConstants.MapGenLargeWidth;
+            height = GameConstants.MapGenLargeHeight;
+            maxRooms = GameConstants.MaxRoomsLarge;
+        }
+
+        // Allow explicit override via constructor (used by tests / old callers)
+        if (_width != GameConstants.MapWidth)  width  = _width;
+        if (_height != GameConstants.MapHeight) height = _height;
+        if (_maxRooms != GameConstants.MaxRooms) maxRooms = _maxRooms;
+
+        var map = new DungeonMap();
+        map.InitializeTiles(width, height);
+
+        for (int i = 0; i < maxRooms; i++)
+        {
+            int roomWidth  = _random.Next(_minRoomSize, _maxRoomSize + 1);
             int roomHeight = _random.Next(_minRoomSize, _maxRoomSize + 1);
-            int x = _random.Next(1, _width - roomWidth - 1);
-            int y = _random.Next(1, _height - roomHeight - 1);
+            int x = _random.Next(1, width  - roomWidth  - 1);
+            int y = _random.Next(1, height - roomHeight - 1);
 
             var newRoom = new Room { X = x, Y = y, Width = roomWidth, Height = roomHeight };
 

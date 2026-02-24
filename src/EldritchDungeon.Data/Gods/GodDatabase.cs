@@ -11,6 +11,23 @@ public static class GodDatabase
             Type = GodType.Cthulhu, Name = "Cthulhu", Domain = "Dreams",
             FavorBonus = "HP Regen, Night Vision",
             AngerTrigger = "Attack Deep Ones",
+            LovedMonsters = new List<string> { "Deep One", "Star-Spawn (Lesser)", "Star-Spawn (Greater)", "Dark Cultist" },
+            HatedMonsters = new List<string> { "Skeleton", "Zombie", "Ghoul" },
+            SummonWaves = new List<GodSummonWave>
+            {
+                new GodSummonWave
+                {
+                    AngerThreshold = 60, TriggerChance = 0.04,
+                    Message = "Cthulhu's dream-voice screams — Deep Ones claw through the walls!",
+                    Monsters = new List<(string, int)> { ("Deep One", 3), ("Dark Cultist", 1) }
+                },
+                new GodSummonWave
+                {
+                    AngerThreshold = 90, TriggerChance = 0.06,
+                    Message = "CTHULHU FHTAGN — a Star-Spawn erupts into reality!",
+                    Monsters = new List<(string, int)> { ("Star-Spawn (Lesser)", 1), ("Deep One", 4) }
+                }
+            },
             Blessing = new GodBlessingEffect
             {
                 Type = BlessingType.HpRegenPerTurn,
@@ -64,7 +81,24 @@ public static class GodDatabase
         {
             Type = GodType.Nyarlathotep, Name = "Nyarlathotep", Domain = "Chaos",
             FavorBonus = "Crit Chance, Loot",
-            AngerTrigger = "Betrayal, breaking promises",
+            AngerTrigger = "Heals too much, stays orderly",
+            LovedMonsters = new List<string> { "Shadow", "Fire Vampire", "Dark Elf" },
+            HatedMonsters = new List<string> { "Goblin", "Kobold", "Rat" },
+            SummonWaves = new List<GodSummonWave>
+            {
+                new GodSummonWave
+                {
+                    AngerThreshold = 60, TriggerChance = 0.04,
+                    Message = "Nyarlathotep laughs. Shadows peel off the walls and attack!",
+                    Monsters = new List<(string, int)> { ("Shadow", 3), ("Fire Vampire", 1) }
+                },
+                new GodSummonWave
+                {
+                    AngerThreshold = 90, TriggerChance = 0.05,
+                    Message = "The Crawling Chaos sends his avatar! RUN.",
+                    Monsters = new List<(string, int)> { ("Nyarlathotep's Avatar", 1) }
+                }
+            },
             Blessing = new GodBlessingEffect
             {
                 Type = BlessingType.CritChanceBonus,
@@ -119,7 +153,24 @@ public static class GodDatabase
         {
             Type = GodType.Azathoth, Name = "Azathoth", Domain = "Void",
             FavorBonus = "Mana, Spell Power",
-            AngerTrigger = "Use holy magic",
+            AngerTrigger = "Use holy magic, avoids combat",
+            LovedMonsters = new List<string> { "Flying Polyp", "Shoggeth", "Elder Thing" },
+            HatedMonsters = new List<string> { "Goblin", "Rat", "Zombie" },
+            SummonWaves = new List<GodSummonWave>
+            {
+                new GodSummonWave
+                {
+                    AngerThreshold = 60, TriggerChance = 0.04,
+                    Message = "Azathoth's mindless hunger manifests — a polyp and shoggeths tear through!",
+                    Monsters = new List<(string, int)> { ("Flying Polyp", 1), ("Shoggeth", 2) }
+                },
+                new GodSummonWave
+                {
+                    AngerThreshold = 90, TriggerChance = 0.05,
+                    Message = "VOID RUPTURE — an Elder Thing and Chthonian claw into reality!",
+                    Monsters = new List<(string, int)> { ("Elder Thing", 1), ("Chthonian", 1) }
+                }
+            },
             Blessing = new GodBlessingEffect
             {
                 Type = BlessingType.ManaRegenPerTurn,
@@ -173,7 +224,24 @@ public static class GodDatabase
         {
             Type = GodType.YogSothoth, Name = "Yog-Sothoth", Domain = "Knowledge",
             FavorBonus = "XP Gain, Identify",
-            AngerTrigger = "Attack scholars",
+            AngerTrigger = "Destroys books, rushes through floors",
+            LovedMonsters = new List<string> { "Phantom", "Wight", "Serpent of N'kai" },
+            HatedMonsters = new List<string> { "Goblin", "Kobold", "Giant Bat" },
+            SummonWaves = new List<GodSummonWave>
+            {
+                new GodSummonWave
+                {
+                    AngerThreshold = 60, TriggerChance = 0.04,
+                    Message = "Yog-Sothoth's gaze turns cold — Phantoms stream from the void!",
+                    Monsters = new List<(string, int)> { ("Phantom", 2), ("Wight", 1) }
+                },
+                new GodSummonWave
+                {
+                    AngerThreshold = 90, TriggerChance = 0.05,
+                    Message = "The Gate opens — a Serpent of N'kai slithers through!",
+                    Monsters = new List<(string, int)> { ("Serpent of N'kai", 1), ("Phantom", 2) }
+                }
+            },
             Blessing = new GodBlessingEffect
             {
                 Type = BlessingType.XpBonusPercent,
@@ -228,7 +296,24 @@ public static class GodDatabase
         {
             Type = GodType.Hastur, Name = "Hastur", Domain = "Stars",
             FavorBonus = "Sanity Resist, Range",
-            AngerTrigger = "Look at stars wrong",
+            AngerTrigger = "Heals sanity, uses holy items",
+            LovedMonsters = new List<string> { "Byakhee", "Hunting Horror", "High Cultist" },
+            HatedMonsters = new List<string> { "Skeleton", "Zombie", "Goblin" },
+            SummonWaves = new List<GodSummonWave>
+            {
+                new GodSummonWave
+                {
+                    AngerThreshold = 60, TriggerChance = 0.04,
+                    Message = "The Yellow Sign burns in your mind — Byakhee descend from above!",
+                    Monsters = new List<(string, int)> { ("Byakhee", 3), ("Hunting Horror", 1) }
+                },
+                new GodSummonWave
+                {
+                    AngerThreshold = 90, TriggerChance = 0.05,
+                    Message = "THE KING IN YELLOW DESCENDS. Hastur's Avatar walks the dungeon.",
+                    Monsters = new List<(string, int)> { ("Hastur's Avatar", 1) }
+                }
+            },
             Blessing = new GodBlessingEffect
             {
                 Type = BlessingType.SanityResistBonus,
@@ -283,7 +368,24 @@ public static class GodDatabase
         {
             Type = GodType.Dagon, Name = "Dagon", Domain = "Deep",
             FavorBonus = "Water Abilities, Damage",
-            AngerTrigger = "Desecrate water",
+            AngerTrigger = "Use fire, kill Deep Ones",
+            LovedMonsters = new List<string> { "Deep One", "Chthonian" },
+            HatedMonsters = new List<string> { "Fire Elemental", "Fire Vampire", "Skeleton" },
+            SummonWaves = new List<GodSummonWave>
+            {
+                new GodSummonWave
+                {
+                    AngerThreshold = 60, TriggerChance = 0.04,
+                    Message = "Dagon's fury floods up from the deep — Deep Ones surge through the floor!",
+                    Monsters = new List<(string, int)> { ("Deep One", 5) }
+                },
+                new GodSummonWave
+                {
+                    AngerThreshold = 90, TriggerChance = 0.05,
+                    Message = "DAGON RISES. His Avatar emerges dripping from the dungeon walls.",
+                    Monsters = new List<(string, int)> { ("Dagon's Avatar", 1), ("Deep One", 3) }
+                }
+            },
             Blessing = new GodBlessingEffect
             {
                 Type = BlessingType.DamageBonus,

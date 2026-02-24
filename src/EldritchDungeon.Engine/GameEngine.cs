@@ -25,6 +25,7 @@ public class GameEngine
     public AddictionSystem AddictionSystem { get; }
     public AISystem AISystem { get; }
     public MagicSystem MagicSystem { get; }
+    public SummoningSystem SummoningSystem { get; }
 
     public GameEngine()
     {
@@ -34,8 +35,9 @@ public class GameEngine
         SanitySystem = new SanitySystem(Log.Add);
         ReligionSystem = new ReligionSystem(Log.Add);
         AddictionSystem = new AddictionSystem(Log.Add);
-        AISystem = new AISystem(CombatSystem);
+        AISystem = new AISystem(CombatSystem, Log.Add);
         MagicSystem = new MagicSystem(Log.Add);
+        SummoningSystem = new SummoningSystem(Log.Add);
     }
 
     public void Initialize(Player player)
@@ -195,7 +197,14 @@ public class GameEngine
                 Tier = savedMonster.Tier,
                 Damage = savedMonster.Damage,
                 XpValue = savedMonster.XpValue,
-                SanityDamage = savedMonster.SanityDamage
+                SanityDamage = savedMonster.SanityDamage,
+                GoldMin = savedMonster.GoldMin,
+                GoldMax = savedMonster.GoldMax,
+                GoldDropChance = savedMonster.GoldDropChance,
+                IsEldritchCoin = savedMonster.IsEldritchCoin,
+                IsSummoned = savedMonster.IsSummoned,
+                Disposition = savedMonster.Disposition,
+                SummonDurationLeft = savedMonster.SummonDurationLeft
             };
             monster.Health.MaxHp = savedMonster.MaxHp;
             monster.Health.CurrentHp = savedMonster.CurrentHp;

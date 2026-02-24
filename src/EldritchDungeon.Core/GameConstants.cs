@@ -43,12 +43,26 @@ public static class GameConstants
     // Dungeon
     public const int MaxDungeonLevel = 25;
 
-    // Map generation
-    public const int MapWidth = 80;
-    public const int MapHeight = 21; // 4 rows reserved for HUD
+    // Viewport (map area on screen — the portion of the map that is visible)
+    public const int ViewportWidth  = 80;
+    public const int ViewportHeight = 21; // rows 0–20; HUD at row 21, messages 22–24
+
+    // Map generation — maps are larger than the screen
+    public const int MapWidth  = ViewportWidth;   // legacy alias; use viewport for rendering
+    public const int MapHeight = ViewportHeight;  // legacy alias
+
+    // Actual map dimensions by floor group (width × height)
+    public const int MapGenSmallWidth  = 100;  // floors  1-5
+    public const int MapGenSmallHeight =  50;
+    public const int MapGenMedWidth    = 120;  // floors  6-15
+    public const int MapGenMedHeight   =  60;
+    public const int MapGenLargeWidth  = 140;  // floors 16-25
+    public const int MapGenLargeHeight =  70;
+
     public const int MinRoomSize = 5;
     public const int MaxRoomSize = 13;
     public const int MaxRooms = 15;
+    public const int MaxRoomsLarge = 25;
     public const int DefaultFovRadius = 8;
     public const int MonstersPerRoomMin = 0;
     public const int MonstersPerRoomMax = 3;

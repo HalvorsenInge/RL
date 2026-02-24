@@ -58,19 +58,42 @@ public class GameScreen : Screen
         return ScreenResult.None;
     }
 
+    private (int camX, int camY) ComputeCamera()
+    {
+        int px = _map!.Player?.X ?? 0;
+        int py = _map.Player?.Y ?? 0;
+
+        int camX = px - GameConstants.ViewportWidth  / 2;
+        int camY = py - GameConstants.ViewportHeight / 2;
+
+        camX = Math.Clamp(camX, 0, Math.Max(0, _map.Width  - GameConstants.ViewportWidth));
+        camY = Math.Clamp(camY, 0, Math.Max(0, _map.Height - GameConstants.ViewportHeight));
+
+        return (camX, camY);
+    }
+
     private void RenderMap()
     {
-        for (int x = 0; x < _map!.Width && x < GameConstants.ScreenWidth; x++)
+        var (camX, camY) = ComputeCamera();
+
+        // Tiles
+        for (int sy = 0; sy < GameConstants.ViewportHeight; sy++)
         {
-            for (int y = 0; y < _map.Height && y < GameConstants.MapHeight; y++)
+            int my = sy + camY;
+            if (my >= _map!.Height) break;
+
+            for (int sx = 0; sx < GameConstants.ViewportWidth; sx++)
             {
-                var tile = _map.GetTile(x, y);
+                int mx = sx + camX;
+                if (mx >= _map.Width) break;
+
+                var tile = _map.GetTile(mx, my);
 
                 if (tile.IsInFov)
                 {
                     char glyph = Glyphs.ForTileType(tile.Type);
                     ConsoleColor color = GetTileColor(tile.Type);
-                    _renderer.Set(x, y, glyph, color);
+                    _renderer.Set(sx, sy, glyph, color);
                 }
                 else if (tile.IsExplored)
                 {
@@ -78,89 +101,93 @@ public class GameScreen : Screen
                     ConsoleColor color = tile.Type == TileType.Wall
                         ? ColorPalette.ExploredWall
                         : ColorPalette.ExploredFloor;
-                    _renderer.Set(x, y, glyph, color);
+                    _renderer.Set(sx, sy, glyph, color);
                 }
-            }
-        }
 
-        // Render tile effects in FOV (over tiles, under entities)
-        for (int ex = 0; ex < _map.Width && ex < GameConstants.ScreenWidth; ex++)
-        {
-            for (int ey = 0; ey < _map.Height && ey < GameConstants.MapHeight; ey++)
-            {
-                var effectTile = _map.GetTile(ex, ey);
-                if (!effectTile.IsInFov) continue;
-                if (effectTile.Effect == TileEffect.None) continue;
-
-                var (glyph, color) = effectTile.Effect switch
+                // Tile effects (over tiles, under entities)
+                if (tile.IsInFov && tile.Effect != TileEffect.None)
                 {
-                    TileEffect.Water => ('~', ConsoleColor.Blue),
-                    TileEffect.Fire  => ('^', ConsoleColor.Red),
-                    TileEffect.Steam => ('*', ConsoleColor.White),
-                    TileEffect.Oil   => ('%', ConsoleColor.DarkYellow),
-                    _                => (' ', ConsoleColor.Black)
-                };
-                _renderer.Set(ex, ey, glyph, color);
-            }
-        }
-
-        // Render items in FOV
-        foreach (var (item, ix, iy) in _map.Items)
-        {
-            if (ix < _map.Width && iy < GameConstants.MapHeight)
-            {
-                var itemTile = _map.GetTile(ix, iy);
-                if (itemTile.IsInFov)
-                {
-                    var color = item switch
+                    var (eg, ec) = tile.Effect switch
                     {
-                        Weapon => ConsoleColor.Cyan,
-                        Armor => ConsoleColor.DarkCyan,
-                        Consumable => ConsoleColor.Green,
-                        _ => ConsoleColor.White
+                        TileEffect.Water => ('~', ConsoleColor.Blue),
+                        TileEffect.Fire  => ('^', ConsoleColor.Red),
+                        TileEffect.Steam => ('*', ConsoleColor.White),
+                        TileEffect.Oil   => ('%', ConsoleColor.DarkYellow),
+                        _                => (' ', ConsoleColor.Black)
                     };
-                    _renderer.Set(ix, iy, item.Glyph, color);
+                    _renderer.Set(sx, sy, eg, ec);
                 }
             }
         }
 
-        // Render shop merchants in FOV
-        foreach (var (sx, sy, _) in _map.Shops)
+        // Items in FOV
+        foreach (var (item, mx, my) in _map!.Items)
         {
-            if (sx < _map.Width && sy < GameConstants.MapHeight)
+            int sx = mx - camX;
+            int sy = my - camY;
+            if (sx < 0 || sx >= GameConstants.ViewportWidth) continue;
+            if (sy < 0 || sy >= GameConstants.ViewportHeight) continue;
+
+            var itemTile = _map.GetTile(mx, my);
+            if (!itemTile.IsInFov) continue;
+
+            var color = item switch
             {
-                var shopTile = _map.GetTile(sx, sy);
-                if (shopTile.IsInFov)
-                    _renderer.Set(sx, sy, '$', ConsoleColor.Yellow);
-                else if (shopTile.IsExplored)
-                    _renderer.Set(sx, sy, '$', ConsoleColor.DarkYellow);
-            }
+                Weapon    => ConsoleColor.Cyan,
+                Armor     => ConsoleColor.DarkCyan,
+                Consumable => ConsoleColor.Green,
+                ToolItem   => ConsoleColor.Yellow,
+                _          => ConsoleColor.White
+            };
+            _renderer.Set(sx, sy, item.Glyph, color);
         }
 
-        // Render monsters in FOV
+        // Shop merchants
+        foreach (var (mx, my, _) in _map.Shops)
+        {
+            int sx = mx - camX;
+            int sy = my - camY;
+            if (sx < 0 || sx >= GameConstants.ViewportWidth) continue;
+            if (sy < 0 || sy >= GameConstants.ViewportHeight) continue;
+
+            var shopTile = _map.GetTile(mx, my);
+            if (shopTile.IsInFov)
+                _renderer.Set(sx, sy, '$', ConsoleColor.Yellow);
+            else if (shopTile.IsExplored)
+                _renderer.Set(sx, sy, '$', ConsoleColor.DarkYellow);
+        }
+
+        // Monsters in FOV
         foreach (var monster in _map.Monsters)
         {
+            int sx = monster.X - camX;
+            int sy = monster.Y - camY;
+            if (sx < 0 || sx >= GameConstants.ViewportWidth) continue;
+            if (sy < 0 || sy >= GameConstants.ViewportHeight) continue;
+
             var tile = _map.GetTile(monster.X, monster.Y);
             if (tile.IsInFov)
-            {
-                _renderer.Set(monster.X, monster.Y, monster.Glyph,
-                    ColorPalette.MonsterByTier(monster.Tier));
-            }
+                _renderer.Set(sx, sy, monster.Glyph, ColorPalette.MonsterByTier(monster.Tier));
         }
 
-        // Render player
+        // Player
         if (_map.Player != null)
         {
-            _renderer.Set(_map.Player.X, _map.Player.Y,
-                _map.Player.Glyph, ColorPalette.Player);
+            int sx = _map.Player.X - camX;
+            int sy = _map.Player.Y - camY;
+            _renderer.Set(sx, sy, _map.Player.Glyph, ColorPalette.Player);
         }
 
-        // Render targeting cursor (drawn last so it's always visible)
-        if (_cursorX.HasValue && _cursorY.HasValue
-            && _cursorX.Value >= 0 && _cursorX.Value < GameConstants.ScreenWidth
-            && _cursorY.Value >= 0 && _cursorY.Value < GameConstants.MapHeight)
+        // Targeting cursor (map coords → screen coords)
+        if (_cursorX.HasValue && _cursorY.HasValue)
         {
-            _renderer.Set(_cursorX.Value, _cursorY.Value, '*', ConsoleColor.Yellow);
+            int csx = _cursorX.Value - camX;
+            int csy = _cursorY.Value - camY;
+            if (csx >= 0 && csx < GameConstants.ViewportWidth
+                && csy >= 0 && csy < GameConstants.ViewportHeight)
+            {
+                _renderer.Set(csx, csy, '*', ConsoleColor.Yellow);
+            }
         }
     }
 

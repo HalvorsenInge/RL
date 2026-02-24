@@ -6,7 +6,7 @@
 
 ### Core Features
 
-- Pure ASCII console interface (80x25 standard)
+- Pure ASCII console interface (80x25 screen, scrolling camera over maps up to 140x70)
 - RogueSharp for map generation and pathfinding
 - Ironman permadeath with JSON saves
 - Dice-rolled stats (4d6 drop lowest) + racial modifiers
@@ -15,14 +15,14 @@
 - 6 classes including Cultist, Gunslinger, Investigator
 - 50+ weapons from medieval to dieselpunk/lovecraftian
 - 40+ monsters in Lovecraftian hierarchy
-- 6 gods with favor/anger mechanics and 24 powers
+- 6 gods that observe and react to player actions — no worship required
 - Sanity healing items with addiction side effects
 
 ## Confirmed Design Decisions
 
 | Aspect | Decision |
 |--------|----------|
-| **Interface** | Pure ASCII console (80x25 standard) |
+| **Interface** | Pure ASCII console, 80x25 screen; maps up to 140x70 with scrolling camera |
 | **Library** | RogueSharp for map/pathfinding |
 | **Save Format** | JSON serialization |
 | **.NET Version** | .NET 8 |
@@ -137,94 +137,259 @@ Effects of Addiction:
 
 ## Religion System Details
 
-### Gods
+### Design Philosophy
 
-| God | Domain | Favor Bonus | Anger Trigger | Tier 1 Power | Tier 2 Power | Tier 3 Power | Tier 4 Power |
-|-----|--------|-------------|---------------|--------------|--------------|--------------|--------------|
-| **Cthulhu** | Dreams | HP Regen, Night Vision | Attack Deep Ones | Dream Walk | Tentacle Slam | Cult Summon | R'lyeh Rising |
-| **Nyarlathotep** | Chaos | Crit Chance, Loot | Betrayal, breaking promises | Mimic | Teleport | Corrupt | Walk Between |
-| **Azathoth** | Void | Mana, Spell Power | Use holy magic | Void Shield | Void Blast | Nullify | Reality Bend |
-| **Yog-Sothoth** | Knowledge | XP Gain, Identify | Attack scholars | Clairvoyance | Scry | The Word | Omnipresence |
-| **Hastur** | Stars | Sanity Resist, Range | Look at stars wrong | Starlight | Stars Emit | Tentacles | Yellow Sign |
-| **Dagon** | Deep | Water Abilities, Damage | Desecrate water | Water Breath | Flood | Tsunami | Abyssal Form |
+Gods are cosmic observers — they do not require worship. They simply watch, and react. The player does not "follow" a god; gods respond to actions whether or not the player cares. High Favor means a god has taken a liking to you. High Anger means they want you dead. Both can happen simultaneously.
 
-### Favor Mechanics
+There are no prayers, sacrifices, or daily rituals. You earn (or lose) divine regard through what you do.
+
+### God Profiles
+
+Each god has a personality expressed through what they like and hate, which monsters are under their protection, and what monsters they despise. These are **semi-randomized per run**: each playthrough seeds slight variations (e.g., Cthulhu might hate Skeletons this run, or Deep Ones, depending on RNG). Core traits remain stable; only 1-2 preferences are shuffled.
+
+| God | Domain | Personality |
+|-----|--------|-------------|
+| **Cthulhu** | Dreams, Deep | Patient, proprietary — deeply jealous of his servants. Rewards those who spread his influence. |
+| **Nyarlathotep** | Chaos, Messenger | Capricious, amused by suffering and irony. Loves chaos, hates order and stagnation. |
+| **Azathoth** | Void, Entropy | Mindless but reactive — patterns of violence and magic ripple through him unpredictably. |
+| **Yog-Sothoth** | Knowledge, Gates | Cerebral and detached. Appreciates learning and exploration; despises ignorance and wanton destruction. |
+| **Hastur** | Stars, Madness | Vain and theatrical. Loves spectacle and suffering; hates being ignored or mocked. |
+| **Dagon** | Sea, Deep Ones | Territorial and primal. Fiercely protects his chosen creatures; loathes fire and holy magic. |
+
+### Favor & Anger Mechanics
 
 ```
-Favor: 0-100
-Anger: 0-100
+Favor: 0-100   (divine regard — unlocks passive blessings and powers)
+Anger: 0-100   (divine wrath — triggers curses, interventions, and monster summons)
 
-Favor Gain:
-- Sacrifice appropriate item: +5-15
-- Complete quest: +25
-- Daily prayer: +2
-- Kill enemy of god: +3
-
-Favor Loss:
-- Attack priest: -30
-- Use anti-god item: -20
-- Wrong sacrifice: -10
-- Abandon faith: -50
-
-Anger Gain:
-- Kill worshipper: +25
-- Defile altar: +40
-- Switch gods: +50
-
-Anger Reduction:
-- Apology prayer: -5 (while <50 anger)
-- Major sacrifice: -20
+Both values are INDEPENDENT. You can have Favor 80 and Anger 60 simultaneously.
 ```
 
-### God Powers (by Tier)
+**Favor rises when you do things a god loves.** Examples:
+- Kill monsters the god hates
+- Destroy altars belonging to a rival god
+- Use the god's favored damage type
+- Find and leave alone monsters the god protects (they notice)
+
+**Favor falls when you do things a god hates.** Examples:
+- Kill monsters under the god's protection
+- Desecrate their altars
+- Use damage types they despise
+- Pick up or destroy items sacred to them
+
+**Anger rises from affronts:**
+- Desecrating their altar: +40
+- Slaying their champion or avatar: +50
+- Killing many of their favored monsters quickly: +5 per kill above threshold
+- Attacking with a weapon anathema to them: +10
+
+**Anger fades slowly over time** (1 point per ~20 turns) unless you keep committing affronts. There is no prayer or apology — actions speak, not words.
+
+### Per-God Preferences (Base — partially randomized per run)
 
 **Cthulhu**
 ```
-Tier 1 (Favor 25): Dreams - Regenerate HP while sleeping (2 HP/turn)
-Tier 2 (Favor 50): Tentacle Slam - 30 void damage, stuns enemy
-Tier 3 (Favor 75): Cult Summon - Summon 2d4 cultists (friendly)
-Tier 4 (Favor 100): R'lyeh Rising - Earthquake, summons 10 undead
+Loved monsters:    Deep One, Star-Spawn (both tiers), Dark Cultist
+Hated monsters:    [1 random from: Skeleton, Ghoul, Vampire Lord, High Priest]
+Loved actions:     Kill undead, enter water tiles, go deeper into dungeon
+Hated actions:     Use holy magic, attack Deep Ones, destroy water sources
+Favored damage:    Void, Sanity
+Anathema damage:   Holy
+God summons (anger ≥60): Sends 1d4 Deep Ones + 1 Dark Cultist
+God summons (anger ≥90): Sends Star-Spawn (Lesser) + wave of Deep Ones
 ```
 
 **Nyarlathotep**
 ```
-Tier 1 (Favor 25): Lucky Coin - Reroll one dice roll
-Tier 2 (Favor 50): Mimicry - Transform into monster for 20 turns
-Tier 3 (Favor 75): Corrupt - Convert enemy to follower (non-boss)
-Tier 4 (Favor 100): Walk Between - Teleport anywhere on map
+Loved monsters:    Shadow, Fire Vampire, Dark Elf
+Hated monsters:    [1 random from: Goblin, Kobold, Orc, Zombie]
+Loved actions:     Open locked chests, kill unique/named enemies, trigger traps on enemies
+Hated actions:     Leave a floor without killing anything, heal to full HP twice in a row
+Favored damage:    Fire, Chaos (any DoT)
+Anathema damage:   Cold
+God summons (anger ≥60): Sends 2d3 Shadows + 1 Fire Vampire
+God summons (anger ≥90): Sends Nyarlathotep's Avatar
 ```
 
 **Azathoth**
 ```
-Tier 1 (Favor 25): Mana Well - 1 MP/turn regen
-Tier 2 (Favor 50): Void Blast - Pure void damage (ignores armor)
-Tier 3 (Favor 75): Nullify - Remove all magic from target
-Tier 4 (Favor 100): Reality Bend - Reroll entire room layout
+Loved monsters:    Flying Polyp, Shoggoth variants, Elder Thing
+Hated monsters:    [1 random from: Ghoul, Rat, Giant Bat, Kobold]
+Loved actions:     Cast spells, destroy walls/terrain, trigger explosions
+Hated actions:     Use non-magical weapons exclusively for 10+ turns, enter temples
+Favored damage:    Void, Explosion
+Anathema damage:   Physical (mundane steel)
+God summons (anger ≥60): Sends Flying Polyp + 1d3 Shoggoths
+God summons (anger ≥90): Reality tear — spawns random tier 7-8 monster at player's feet
 ```
 
 **Yog-Sothoth**
 ```
-Tier 1 (Favor 25): Ancient Knowledge - Auto-identify item
-Tier 2 (Favor 50): Clairvoyance - Reveal entire floor map
-Tier 3 (Favor 75): The Word - Kill any enemy (non-boss)
-Tier 4 (Favor 100): Omnipresence - Act twice per turn
+Loved monsters:    Phantom, Wight, Serpent of N'kai
+Hated monsters:    [1 random from: Goblin, Kobold, Rat, Zombie]
+Loved actions:     Identify items, read tomes/scrolls, discover new dungeon rooms
+Hated actions:     Destroy books/scrolls, skip floors without exploring ≥70% of tiles
+Favored damage:    Sanity, Magic
+Anathema damage:   Fire (destroys knowledge)
+God summons (anger ≥60): Sends 2 Phantoms + 1 Wight
+God summons (anger ≥90): Sends Serpent of N'kai + temporal echo (duplicate of a recently killed enemy)
 ```
 
 **Hastur**
 ```
-Tier 1 (Favor 25): Starlight - Light up room, +10% accuracy
-Tier 2 (Favor 50): Stars Emit - AoE star damage, -10 sanity
-Tier 3 (Favor 75): Yellow Sign - Enemies flee in terror
-Tier 4 (Favor 100): The King in Yellow - Summon Hastur's avatar
+Loved monsters:    Byakhee, Hunting Horror, High Cultist
+Hated monsters:    [1 random from: Skeleton, Zombie, Rat, Ghoul]
+Loved actions:     Take sanity damage (ironically pleasing), kill enemies in one hit, operate in darkness
+Hated actions:     Use light sources aggressively, heal sanity, destroy star-pattern tiles
+Favored damage:    Sanity, Cold
+Anathema damage:   Holy, Light
+God summons (anger ≥60): Sends 1d4 Byakhee + Hunting Horror
+God summons (anger ≥90): Yellow Sign curse — all enemies in FOV become frenzied; Hastur's Avatar spawns at stairs
 ```
 
 **Dagon**
 ```
-Tier 1 (Favor 25): Water Breath - Breathe underwater
-Tier 2 (Favor 50): Flood - Fill room with shallow water
-Tier 3 (Favor 75): Tsunami - Massive water damage, push enemies
-Tier 4 (Favor 100): Abyssal Form - Transform into Deep One, +100 HP, +20 damage
+Loved monsters:    Deep One, Chthonian, Giant Spider (aquatic variants)
+Hated monsters:    [1 random from: Fire Elemental, Fire Vampire, Orc, Dark Elf]
+Loved actions:     Move through water tiles, kill fire monsters, go deeper
+Hated actions:     Use fire magic, drain/destroy water tiles, kill Deep Ones
+Favored damage:    Cold, Poison, Physical (crushing)
+Anathema damage:   Fire, Lightning (in water)
+God summons (anger ≥60): Sends 1d6 Deep Ones
+God summons (anger ≥90): Dagon's Avatar emerges from nearest water tile (or spawns mid-room if none)
 ```
+
+### Divine Interventions (Favor-based)
+
+Gods occasionally act in your favor when Favor is high — unprompted, unrequested. These are **not powers you activate**; they just happen.
+
+| Favor Range | Example Intervention |
+|-------------|---------------------|
+| 25-49 | Brief blessing: +5 to next attack roll; a killed monster drops extra loot |
+| 50-74 | Passive aura: matching damage type +10% for current floor |
+| 75-89 | Direct gift: a god-specific item appears at your feet |
+| 90-100 | Champion status: god summons allies to fight alongside you (1d4 creatures they love) |
+
+### God Powers (Favor-Gated, Passive Unlocks)
+
+These unlock automatically at Favor thresholds — no activation required unless noted.
+
+**Cthulhu**
+```
+Favor 25:  Dreamer's Resilience — regenerate 1 HP/turn in dark rooms
+Favor 50:  Void Sight — see in darkness; Deep Ones ignore you unless attacked
+Favor 75:  Tentacle Lash — on melee kill, chance to proc tentacle for +20 void damage
+Favor 100: R'lyeh Rises — active; earthquake collapses walls, spawns 2d6 undead allies
+```
+
+**Nyarlathotep**
+```
+Favor 25:  Lucky Devil — once per floor, reroll a missed attack
+Favor 50:  Shifting Face — once per floor, transform appearance (enemies ignore you 5 turns)
+Favor 75:  Corruption Touch — 15% chance on hit to make non-boss enemy fight for you
+Favor 100: Walk Between Worlds — active; teleport to any visible tile; no cooldown
+```
+
+**Azathoth**
+```
+Favor 25:  Void Leak — mana regenerates 1 MP/turn passively
+Favor 50:  Null Armor — 10% of incoming magic damage is absorbed as mana
+Favor 75:  Entropy Field — nearby enemies take 2 void damage/turn (no action required)
+Favor 100: Reality Shatter — active; destroys all terrain in 5-tile radius, damages all enemies in range
+```
+
+**Yog-Sothoth**
+```
+Favor 25:  Gate Sense — auto-identify all items on pickup
+Favor 50:  Through the Gates — reveal entire current floor map instantly
+Favor 75:  The Eternal Word — active (1/floor); instantly kill one non-boss enemy
+Favor 100: All-In-One — act twice per turn for 10 turns (once per dungeon)
+```
+
+**Hastur**
+```
+Favor 25:  King's Gaze — +15% ranged accuracy in dim/dark tiles
+Favor 50:  Yellow Aura — enemies within FOV have 10% chance to cower each turn
+Favor 75:  Sign of Hastur — active; all enemies in room flee for 8 turns
+Favor 100: The King Descends — Hastur's Avatar is summoned as your ally for current floor
+```
+
+**Dagon**
+```
+Favor 25:  Gills — no drowning; water tiles cost no movement penalty
+Favor 50:  Tide Caller — water tiles spread 1 tile per 10 turns on current floor
+Favor 75:  Crushing Depth — active; flood current room, push all enemies back 3 tiles, 20 water damage
+Favor 100: Abyssal Form — active (1/run); become a Deep One hybrid for 30 turns (+100 HP, +20 dmg, water abilities)
+```
+
+### Divine Wrath Events (Anger-based)
+
+When a god's Anger hits a threshold, they act against you directly.
+
+| Anger | Event |
+|-------|-------|
+| 40    | Warning: ominous message; minor curse (e.g., -5 to hit for 20 turns) |
+| 60    | Monster summon wave (see per-god table above) |
+| 75    | Stat drain curse: -10 to a random stat until next floor |
+| 90    | Elite monster summon wave (see per-god table above) |
+| 100   | God's champion spawns — a named, buffed version of their favored monster type; tracks you across floors |
+
+## Spell Database
+
+### Standard Spells
+
+| Spell | MP | Target | Effect | Notes |
+|-------|----|--------|--------|-------|
+| **Magic Bolt** | 5 | Single | 10 magic damage | Basic ranged attack |
+| **Fireball** | 12 | Area (3r) | 25 fire damage, ignites tiles | Starts fires |
+| **Frost Nova** | 10 | Area (2r) | 15 cold damage, freeze 3 turns | Extinguishes fire |
+| **Lightning Strike** | 10 | Chain | 20 lightning, chains to 2 more | Conducts through water |
+| **Mage Armor** | 8 | Self | +15 AC for 20 turns | — |
+| **Void Bolt** | 8 | Single | 18 void damage | Ignores armor |
+| **Healing Word** | 10 | Self | Restore 20 HP | — |
+| **Blink** | 6 | Self | Teleport to random adjacent tile | Good for escapes |
+| **Phase Step** | 14 | Self | Pass through walls for 5 turns | Cannot end turn inside wall |
+| **Mirror Image** | 12 | Self | Create 3 decoys; enemies target randomly | Decoys have 1 HP |
+| **Raise Dead** | 15 | Corpse | Animate a killed monster as ally for 15 turns | Any monster tier |
+| **Bone Spear** | 9 | Line | 22 physical+bone damage, pierces all in line | — |
+| **Petrify** | 16 | Single | Turns enemy to stone for 5 turns (stunned, +50% dmg) | Non-boss only |
+| **Gravity Well** | 14 | Area (4r) | Pull all enemies 3 tiles toward caster | Can pin to walls |
+| **Blood Boil** | 18 | Single | 35 internal damage over 4 turns; bypasses armor | Nasty |
+| **Wither** | 12 | Single | Reduce enemy max HP by 20% permanently | Stacks |
+| **Eldritch Drain** | 10 | Single | Steal 15 HP and 5 sanity from enemy | Life-steal |
+| **Swarm of Rats** | 10 | Area | Summon 2d4 rats that harry enemies for 8 turns | Cheap summon |
+| **Static Field** | 14 | Self (aura) | Zap all adjacent enemies for 8 lightning/turn for 5 turns | Melee deterrent |
+| **Silence** | 8 | Area (3r) | Prevents all spellcasting in radius for 6 turns | Affects player too |
+| **Shadow Step** | 10 | Self | Teleport behind target enemy | Backstab setup |
+| **Entangle** | 9 | Area (2r) | Root enemies in place for 4 turns | Roots in vines |
+| **Summon Horror** | 25 | Room | Summon 1 random Lovecraftian creature (tier 4-6) | Uncontrolled — may attack you |
+| **Death Word** | 20 | Single | Instantly kills enemy below 20% HP | Does nothing above threshold |
+| **Polymorph** | 22 | Single | Transform enemy into harmless creature for 10 turns | Drops current weapon |
+| **Time Echo** | 30 | Self | Undo last move (rewind one turn) | 1/floor |
+
+### Super Spells
+
+Super spells are high-cost, dramatic, level-wide effects. They appear with `[SUPER]` in the Spellbook and cost significant mana.
+
+| Spell | MP | Effect |
+|-------|----|--------|
+| **Eye in the Sky** | 50 | Reveals every monster (name, HP, position) and item on the floor. Opens message log with full itemized report. |
+| **Armageddon Rain** | 60 | Calls meteors on every room. 40-80 fire damage per enemy on floor; sets all non-water tiles on fire. Dangerous to self. |
+| **Mass Petrification** | 55 | Every non-boss enemy on the floor is frozen for 8 turns. Massive tactical window. |
+| **Reality Fracture** | 65 | Shatters all walls in a 6-tile radius. Spawns 1d4 random monsters from random tiers (chaos). |
+| **The Dreaming Word** | 70 | All enemies on floor are subjected to a sanity check — each loses 1d8×5 sanity. May drive weaker enemies mad (fight each other). |
+| **Summon Horde** | 50 | Summon 3d6 undead allies (random tier 1-3). They last until killed or floor change. |
+| **Void Collapse** | 80 | Open a singularity at target tile. All entities within 5 tiles are pulled in and take 10 void damage/turn for 5 turns. Then it explodes (80 AoE). |
+
+### Spell Acquisition
+
+- Starting spells depend on class (see Character Creation)
+- Scrolls found in dungeon teach new spells permanently
+- Tomes (rare) teach super spells
+- Some spells are locked behind sanity thresholds (cannot learn Summon Horror if Sanity > 50 — you aren't mad enough yet)
+- Cultist and Mage learn spells faster; others can still learn, just find fewer spell scrolls
+
+---
 
 ## Weapon Database (Complete)
 
@@ -284,70 +449,101 @@ Tier 4 (Favor 100): Abyssal Form - Transform into Deep One, +100 HP, +20 damage
 
 ## Monster Database (Complete)
 
+### Gold Drops
+
+Every monster can drop gold. Intelligent or civilized monsters (goblins, cultists, orcs, elves, etc.) always carry some. Beasts and undead drop it rarely. Lovecraftian entities drop eldritch coins — strange currency that counts as gold but also has sanity cost to pick up (1-3 sanity).
+
+| Monster Type | Gold Drop Chance | Gold Amount |
+|--------------|-----------------|-------------|
+| Beast (rats, bats, spiders) | 5% | 1-3 gp |
+| Humanoid (goblin, orc, elf) | 80% | 5-25 gp |
+| Undead (skeleton, zombie, ghoul) | 15% | 2-10 gp (old coins) |
+| Cultist (any tier) | 90% | 10-50 gp |
+| Deep One | 40% | 5-20 gp (strange coins, -1 sanity) |
+| Lovecraftian (tier 5+) | 25% | 15-60 gp (eldritch coins, -1d4 sanity) |
+| Avatar / Boss | 100% | 200-500 gp + artifact |
+
+Gold is used at shops (found on floors 5, 10, 15, 20) and at mysterious merchants that occasionally appear. See Economy section.
+
 ### Tier 1-2 (Dungeon Levels 1-3)
 
-| Monster | HP | Damage | Sanity | XP | Abilities |
-|---------|-----|--------|--------|-----|-----------|
-| Rat | 5 | 2 | 0 | 10 | Swarm (5+) |
-| Giant Bat | 8 | 3 | 0 | 15 | Flying |
-| Goblin | 15 | 5 | 0 | 25 | Numbers |
-| Kobold | 12 | 4 | 0 | 20 | Traps |
-|Skeleton| 20 | 8 | 2 | 35 | Undead |
-| Zombie | 25 | 6 | 1 | 30 | Slow, rot |
-| Giant Spider | 18 | 5 | 3 | 40 | Poison |
-| Cave Spider | 12 | 3 | 2 | 30 | Web |
+| Monster | HP | Damage | Sanity | XP | Gold | Abilities |
+|---------|-----|--------|--------|-----|------|-----------|
+| Rat | 5 | 2 | 0 | 10 | — | Swarm (5+) |
+| Giant Bat | 8 | 3 | 0 | 15 | — | Flying |
+| Goblin | 15 | 5 | 0 | 25 | 5-15 | Numbers |
+| Kobold | 12 | 4 | 0 | 20 | 3-10 | Traps |
+| Skeleton | 20 | 8 | 2 | 35 | 2-6 | Undead |
+| Zombie | 25 | 6 | 1 | 30 | — | Slow, rot |
+| Giant Spider | 18 | 5 | 3 | 40 | — | Poison |
+| Cave Spider | 12 | 3 | 2 | 30 | — | Web |
 
 ### Tier 3-4 (Dungeon Levels 4-7)
 
-| Monster | HP | Damage | Sanity | XP | Abilities |
-|---------|-----|--------|--------|-----|-----------|
-| Orc | 35 | 12 | 0 | 75 | Berserk |
-| Dark Elf | 30 | 14 | 2 | 80 | Magic (-10 HP) |
-| Ghoul | 40 | 10 | 5 | 90 | Paralysis |
-| Ogre | 60 | 18 | 3 | 100 | Throw rocks |
-| Dark Cultist | 35 | 10 | 8 | 100 | Summon |
-| Worm | 25 | 15 | 4 | 85 | Burrow |
-| Fire Vampire | 25 | 15 | 5 | 95 | Life drain |
-| Shadow | 20 | 8 | 10 | 110 | Invisibility |
+| Monster | HP | Damage | Sanity | XP | Gold | Abilities |
+|---------|-----|--------|--------|-----|------|-----------|
+| Orc | 35 | 12 | 0 | 75 | 10-30 | Berserk |
+| Dark Elf | 30 | 14 | 2 | 80 | 15-40 | Magic (-10 HP) |
+| Ghoul | 40 | 10 | 5 | 90 | 5-15 | Paralysis |
+| Ogre | 60 | 18 | 3 | 100 | 20-50 | Throw rocks |
+| Dark Cultist | 35 | 10 | 8 | 100 | 15-45 | Summon |
+| Worm | 25 | 15 | 4 | 85 | — | Burrow |
+| Fire Vampire | 25 | 15 | 5 | 95 | 10-25 | Life drain |
+| Shadow | 20 | 8 | 10 | 110 | — | Invisibility |
 
 ### Tier 5-6 (Dungeon Levels 8-12)
 
-| Monster | HP | Damage | Sanity | XP | Abilities |
-|---------|-----|--------|--------|-----|-----------|
-| Deep One | 50 | 18 | 15 | 200 | Amphibious, Devolve |
-| Mi-Go | 55 | 20 | 20 | 220 | Flying, Brain harvest |
-| Ghast | 45 | 22 | 12 | 200 | Stench, Rot |
-| Wight | 60 | 15 | 15 | 210 | Level drain |
-| Phantom | 35 | 12 | 25 | 230 | Possession |
-| Byakhee | 50 | 18 | 10 | 200 | Flying, Poison |
-| Hunting Horror | 40 | 25 | 30 | 250 | Constrict |
-| Star-Spawn (Lesser) | 70 | 25 | 20 | 250 | Mythos magic |
+| Monster | HP | Damage | Sanity | XP | Gold | Abilities |
+|---------|-----|--------|--------|-----|------|-----------|
+| Deep One | 50 | 18 | 15 | 200 | 10-30* | Amphibious, Devolve |
+| Mi-Go | 55 | 20 | 20 | 220 | 20-40* | Flying, Brain harvest |
+| Ghast | 45 | 22 | 12 | 200 | 5-15 | Stench, Rot |
+| Wight | 60 | 15 | 15 | 210 | 10-20 | Level drain |
+| Phantom | 35 | 12 | 25 | 230 | — | Possession |
+| Byakhee | 50 | 18 | 10 | 200 | 15-30* | Flying, Poison |
+| Hunting Horror | 40 | 25 | 30 | 250 | — | Constrict |
+| Star-Spawn (Lesser) | 70 | 25 | 20 | 250 | 30-60* | Mythos magic |
+
+*Eldritch coins — picking up costs 1d4 sanity.
 
 ### Tier 7-8 (Dungeon Levels 13-18)
 
-| Monster | HP | Damage | Sanity | XP | Abilities |
-|---------|-----|--------|--------|-----|-----------|
-| Elder Thing | 80 | 30 | 25 | 400 | Sonic attack |
-| Shoggeth | 100 | 35 | 35 | 450 | Regeneration, Acid |
-| High Cultist | 70 | 25 | 30 | 380 | Summon, Sanity blast |
-| Chthonian | 90 | 28 | 20 | 400 | Burrow, Ambush |
-| Fire Elemental | 70 | 35 | 5 | 350 | Fire immunity |
-| Vampire Lord | 120 | 30 | 25 | 450 | Domination |
-| Flying Polyp | 80 | 25 | 40 | 480 | Telekinesis |
-| Serpent of N'kai | 95 | 32 | 35 | 500 | Hypnosis |
+| Monster | HP | Damage | Sanity | XP | Gold | Abilities |
+|---------|-----|--------|--------|-----|------|-----------|
+| Elder Thing | 80 | 30 | 25 | 400 | 40-80* | Sonic attack |
+| Shoggoth | 100 | 35 | 35 | 450 | — | Regeneration, Acid |
+| High Cultist | 70 | 25 | 30 | 380 | 50-120 | Summon, Sanity blast |
+| Chthonian | 90 | 28 | 20 | 400 | — | Burrow, Ambush |
+| Fire Elemental | 70 | 35 | 5 | 350 | — | Fire immunity |
+| Vampire Lord | 120 | 30 | 25 | 450 | 80-150 | Domination |
+| Flying Polyp | 80 | 25 | 40 | 480 | 30-60* | Telekinesis |
+| Serpent of N'kai | 95 | 32 | 35 | 500 | 50-100* | Hypnosis |
 
 ### Tier 9-10 (Dungeon Levels 19-25)
 
-| Monster | HP | Damage | Sanity | XP | Abilities |
-|---------|-----|--------|--------|-----|-----------|
-| High Priest | 150 | 45 | 50 | 1000 | Summon, Miracles |
-| Star-Spawn (Greater) | 180 | 55 | 60 | 1200 | Reality warp |
-| Dagon's Avatar | 200 | 50 | 55 | 1300 | Water control |
-| Hastur's Avatar | 220 | 60 | 70 | 1400 | Yellow Sign |
-| Nyarlathotep's Avatar| 250 | 65 | 75 | 1500 | Chaos magic |
-| Shuggoth (Elder) | 300 | 70 | 80 | 1800 | Hive mind |
-| Great Old One | 500 | 100 | 100 | 5000 | Reality destruction |
-| Cthulhu | 666 | 150 | 200 | 10000 | Dream revival |
+| Monster | HP | Damage | Sanity | XP | Gold | Abilities |
+|---------|-----|--------|--------|-----|------|-----------|
+| High Priest | 150 | 45 | 50 | 1000 | 200-400 | Summon, Miracles |
+| Star-Spawn (Greater) | 180 | 55 | 60 | 1200 | 100-200* | Reality warp |
+| Dagon's Avatar | 200 | 50 | 55 | 1300 | 300* | Water control |
+| Hastur's Avatar | 220 | 60 | 70 | 1400 | 300* | Yellow Sign |
+| Nyarlathotep's Avatar | 250 | 65 | 75 | 1500 | 400* | Chaos magic |
+| Shoggoth (Elder) | 300 | 70 | 80 | 1800 | — | Hive mind |
+| Great Old One | 500 | 100 | 100 | 5000 | 1000* | Reality destruction |
+| Cthulhu | 666 | 150 | 200 | 10000 | 0 (what would you buy?) | Dream revival |
+
+### Economy
+
+Gold is found on monsters, in chests, and scattered on floors. It is spent at:
+
+| Vendor | Location | Sells |
+|--------|----------|-------|
+| **Shop** | Fixed floors (5, 10, 15, 20) | Weapons, armor, potions, scrolls |
+| **Black Market** | Random (20% chance per floor) | Illegal sanity drugs, cursed items, forbidden tomes |
+| **Wandering Merchant** | Random encounter (10% per floor) | Mixed stock, high prices |
+| **Cultist Fence** | Floors 8+ | Eldritch artifacts, spell scrolls, Deep One gear |
+
+Eldritch coins (from Lovecraftian monsters) are worth 2× standard gold at the Cultist Fence but only 1× elsewhere. Shops on deeper floors stock higher-tier goods. Prices scale with dungeon depth.
 
 ## Technical Architecture
 
@@ -381,18 +577,20 @@ All actors use components for modularity:
 
 ### Map System (RogueSharp Integration)
 
+Maps are larger than the screen. The screen is always 80x25; the map is 120x60 (or larger on deeper floors). A camera viewport tracks the player and renders only the visible portion.
+
 ```csharp
 public class DungeonMap : Map
 {
     public List<Room> Rooms { get; set; }
     public List<Stairs> Stairs { get; set; }
-    
+
     public void Generate(int level, int width, int height)
     {
         // BSP room generation
         var generator = new ProceduralGenerator();
         generator.GenerateDungeon(this, level);
-        
+
         // Place entities based on level
         var placer = new EntityPlacer();
         placer.PlaceMonsters(this, level);
@@ -400,6 +598,36 @@ public class DungeonMap : Map
     }
 }
 ```
+
+### Camera / Viewport System
+
+The game area occupies 80×18 tiles on screen (leaving 7 rows for the HUD and message log). The map can be up to **120×60 tiles**, with size scaling by dungeon depth.
+
+```
+Map dimensions by floor:
+  Floors  1-5:   100×50
+  Floors  6-15:  120×60
+  Floors 16-25:  140×70
+
+Viewport: 80×18 tiles, centered on the player.
+Camera clamps at map edges (no black borders — just the wall tiles).
+```
+
+**Camera follows player every move.** Only changed cells are redrawn (double-buffer). The minimap (10×5 in the HUD area) always shows the full floor layout with player position marked.
+
+### Sanity-Triggered Map Mutations
+
+The map is static under normal conditions. At **Broken** sanity (0-9), reality starts to come apart:
+
+| Trigger | Mutation |
+|---------|----------|
+| Sanity drops into Broken | Walls shift: 1d6 random wall tiles become floors, 1d6 floor tiles become walls |
+| Each 20 turns at Broken | Rooms re-connect randomly: a new passage may open or close somewhere on the floor |
+| Sanity stays Broken for 50+ turns | A previously-visited room has its contents reshuffled (items, monsters repositioned) |
+| Hallucination peak (sanity 0-2) | The stairs may appear to move (fake stair tiles appear at random positions) |
+| Returning to Stable from Broken | All mutations from this floor **persist** — the map was changed, you just didn't notice |
+
+Mutations are local and cosmetic enough that the floor remains completable, but navigation becomes unreliable. The minimap reflects real layout; hallucinated tiles only affect the main view.
 
 ## Final Folder Structure
 
@@ -593,7 +821,9 @@ EldritchDungeon/
 
 All design decisions are confirmed. The plan covers:
 
-✅ Pure ASCII console interface with RogueSharp
+✅ Pure ASCII console interface with RogueSharp; scrolling camera over large maps (up to 140×70)
+✅ Sanity-triggered map mutations (walls shift, passages open/close at Broken sanity)
+✅ Monster gold drops + economy (shops, black market, cultist fence, eldritch coins)
 ✅ Ironman permadeath
 ✅ Dice-rolled stats with racial modifiers  
 ✅ Class selection menu with starting equipment
@@ -603,6 +833,7 @@ All design decisions are confirmed. The plan covers:
 ✅ 6 classes (including Cultist, Gunslinger, Investigator)
 ✅ 50+ weapons (medieval through dieselpunk/lovecraftian)
 ✅ 40+ monsters (Lovecraftian horror hierarchy)
-✅ 6 gods with favor/anger mechanics and 24 powers
+✅ 6 gods with reactive favor/anger mechanics, per-god preferences (semi-random per run), divine interventions, and monster summons
+✅ 25+ spells including super spells with dramatic level-wide effects
 ✅ JSON save system
 ✅ Component-based architecture for extensibility
